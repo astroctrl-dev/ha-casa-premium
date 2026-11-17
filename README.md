@@ -27,26 +27,26 @@ The available entities depend on the connected unit, firmware and received teleg
 | Converter | RS-485 to TCP/IP, configured as a transparent TCP server |
 | Serial connection | Tested R120 configuration: 38400 baud, 8N1, no hardware flow control |
 | Home Assistant | Tested on Core 2026.11.2. Earlier versions may also work but have not been tested. |
-| HACS | Required for the installation method described below |
+| Installation | Home Assistant Marketplace on Core 2026.11 and later; legacy HACS menus are documented separately |
 | Network | Home Assistant must be able to reach the converter’s local IP address and TCP port, normally 8899 |
 
 Prepare the hardware using the [wiring and converter guide](docs/hardware.md).
 
 Keep the original CASA control panel connected so that the required serial communication remains available.
 
-## Installation with HACS
+## Installation with Marketplace / HACS
 
 1. Create a Home Assistant backup.
-2. Open HACS → Menu → Custom repositories.
-3. Add the following repository as an Integration:  
-   https://github.com/astroctrl-dev/ha-casa-premium
-4. Find Swegon CASA Premium in HACS.
-5. Select the intended release and download it.
-6. Validate your Home Assistant configuration and perform a full Home Assistant Core restart.
-7. Navigate to Settings → Devices & services → Add integration.
-8. Search for Swegon CASA Premium.
-9. Enter the IP address or hostname of your RS-485 converter and its TCP port, normally 8899.
-10. Select Submit to complete the configuration.
+2. On Home Assistant Core 2026.11 and later, open **Settings → Marketplace → Add from link**.
+3. Enter `https://github.com/astroctrl-dev/ha-casa-premium`, select **Add**, and choose **Integration** if asked.
+4. Open **Swegon CASA Premium**, select the intended release and install it.
+5. Follow any restart prompt. For this first release, validate your Home Assistant configuration and perform a full Home Assistant Core restart before setup.
+6. Navigate to **Settings → Devices & services → Add integration**.
+7. Search for **Swegon CASA Premium**.
+8. Enter the IP address or hostname of your RS-485 converter and its TCP port, normally **8899**.
+9. Select **Submit** to complete the configuration.
+
+On older installations still using HACS, use **HACS → Menu → Custom repositories** and add the same URL as an **Integration**. Earlier Home Assistant versions have not been tested; release metadata currently requires Core 2026.11.2. This project is added from a link and is not included in the default catalogue.
 
 Your sensors will appear once the converter supplies matching CASA telegrams.
 

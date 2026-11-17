@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "CASA Premium TCP gateway",
+        "description": "Read-only: this integration will not send control or clock commands to the ventilation unit.",
+        "data": {
+          "host": "Gateway IP address or hostname",
+          "port": "TCP port"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This gateway is already configured."
+    },
+    "error": {
+      "invalid_host": "Invalid IP address or hostname.",
+      "cannot_connect": "Cannot connect to gateway. Previous settings are preserved."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Change CASA connection",
+        "description": "Change IP address and TCP port. Existing settings are kept if connection fails.",
+        "data": {
+          "host": "Gateway IP address or hostname",
+          "port": "TCP port"
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "Invalid IP address or hostname.",
+      "cannot_connect": "Cannot connect to gateway. Previous settings are preserved."
+    }
+  }
+}

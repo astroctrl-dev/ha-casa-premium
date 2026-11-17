@@ -1,0 +1,12 @@
+
+sync_clock:
+  name: Synchronize CASA Clock
+  description: Synchronize CASA clock with Home Assistant time.
+  fields:
+    force:
+      name: Force synchronization
+      description: Synchronize even if clock drift is below 60 seconds.
+      required: false
+      default: false
+      selector:
+        boolean:

@@ -1,0 +1,53 @@
+{
+  "entity": {
+    "select": {
+      "ventilation_mode": {
+        "name": "Ventilation Mode",
+        "state": {
+          "away": "Away",
+          "home": "Home",
+          "boost_30": "Boost 30 min",
+          "boost_60": "Boost 60 min",
+          "boost_120": "Boost 120 min",
+          "boost_permanent": "Permanent Boost",
+          "fireplace_10": "Fireplace 10 min (status)"
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "CASA Premium TCP gateway",
+        "description": "Read-only: no control commands will be sent to the ventilation unit.",
+        "data": {
+          "host": "Gateway IP address or hostname",
+          "port": "TCP port"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This gateway is already configured."
+    },
+    "error": {
+      "invalid_host": "Invalid IP address or hostname.",
+      "cannot_connect": "Cannot connect to gateway. Previous settings are preserved."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Change CASA connection",
+        "description": "Change IP address and TCP port. Existing settings are kept if connection fails.",
+        "data": {
+          "host": "Gateway IP address or hostname",
+          "port": "TCP port"
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "Invalid IP address or hostname.",
+      "cannot_connect": "Cannot connect to gateway. Previous settings are preserved."
+    }
+  }
+}

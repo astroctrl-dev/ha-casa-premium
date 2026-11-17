@@ -1,0 +1,53 @@
+{
+  "entity": {
+    "select": {
+      "ventilation_mode": {
+        "name": "Ventilasjonsmodus",
+        "state": {
+          "away": "Borte",
+          "home": "Hjemme",
+          "boost_30": "Forsering 30 min",
+          "boost_60": "Forsering 60 min",
+          "boost_120": "Forsering 120 min",
+          "boost_permanent": "Forsering permanent",
+          "fireplace_10": "Peisfunksjon 10 min (status)"
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "CASA Premium TCP-gateway",
+        "description": "Kun lesing: ingen styrings- eller klokkekommandoer sendes til ventilasjonsaggregatet.",
+        "data": {
+          "host": "IP-adresse eller vertsnavn",
+          "port": "TCP-port"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Denne gatewayen er allerede konfigurert."
+    },
+    "error": {
+      "invalid_host": "Ugyldig IP-adresse eller vertsnavn.",
+      "cannot_connect": "Kan ikke koble til gatewayen. Forrige konfigurasjon beholdes."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Endre CASA-tilkobling",
+        "description": "Endre IP-adresse og TCP-port. Eksisterende oppsett beholdes hvis tilkobling mislykkes.",
+        "data": {
+          "host": "IP-adresse eller vertsnavn",
+          "port": "TCP-port"
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "Ugyldig IP-adresse eller vertsnavn.",
+      "cannot_connect": "Kan ikke koble til gatewayen. Forrige konfigurasjon beholdes."
+    }
+  }
+}

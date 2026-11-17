@@ -6,18 +6,24 @@
 
 - Check your [unit and controller](supported-devices.md).
 - Wire and configure the [RS-485 to TCP/IP converter](hardware.md).
-- Install HACS and use Home Assistant Core 2026.11.2 or later.
+- Use Home Assistant Core 2026.11.2, the tested baseline. On Core 2026.11 and later, use the built-in Marketplace; do not install the legacy HACS integration for this purpose.
 - Create a full Home Assistant backup. If replacing a previous integration, keep a copy of its complete integration directory too.
 
-## Install through HACS
+## Install through Marketplace (Core 2026.11 and later)
 
-1. Open **HACS** and select **menu → Custom repositories**.
-2. Enter `https://github.com/astroctrl-dev/ha-casa-premium` and select category **Integration**.
-3. Add the repository, find **Swegon CASA Premium** and download the intended release.
+1. Open **Settings → Marketplace → Add from link**.
+2. Enter `https://github.com/astroctrl-dev/ha-casa-premium` and select **Add**. Connect your GitHub account if Marketplace asks. This GitHub connection belongs to the installation tool; CASA monitoring itself needs no cloud account.
+3. Select **Integration** if asked, open **Swegon CASA Premium**, select the intended release and install it.
 4. Save configuration changes and run Home Assistant's configuration check. On HA OS: `ha core check`. If validation fails, stop and restore your backup.
-5. Restart **Home Assistant Core** fully. On HA OS: `ha core restart`. A YAML reload is insufficient for installed Python files.
+5. Follow any restart prompt. For this release, restart **Home Assistant Core** fully before setup. On HA OS: `ha core restart`. A YAML reload is insufficient for installed Python files.
 
-For a prerelease, enable prerelease/beta visibility in HACS and select that release explicitly. The project is a HACS Custom Repository; it is not listed in the HACS default catalogue.
+The Marketplace may load a new GUI integration immediately after first installation; a full restart remains the conservative procedure documented here. Updates to already loaded Python code require a restart.
+
+## Legacy HACS menus
+
+On an older installation that still uses HACS, open **HACS → menu → Custom repositories**, enter the same URL, select **Integration**, and download the intended release. Earlier Core versions have not been tested; the current release metadata sets Core 2026.11.2 as the installation floor. Do not interpret these legacy menu directions as verified support for earlier Core versions.
+
+For a prerelease, enable prerelease/beta visibility in the installation tool and select that release explicitly. This project is added from a custom repository link; it is not listed in the default catalogue. A private staging repository cannot yet be installed through this public distribution path.
 
 ## Add the connection
 

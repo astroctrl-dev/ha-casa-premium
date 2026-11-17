@@ -15,7 +15,19 @@ The diagram below follows the project R120 cable reference: **view from the cabl
 | 4 | Green | RS-485 A (D+) | **A** |
 | 5 | Yellow | Signal reference | **GND** |
 
-Pins 1 and 6 are unused in this reference. Yellow connects to **signal GND**, not the power-input V− terminal shown on some converters. Locate terminals by their labels; the diagram does not prescribe the terminal positions on every converter. Power the converter separately as required by its instructions. Keep the original CASA panel and safety mechanisms operational.
+Pins 1 and 6 are unused in this reference. Yellow connects to **signal GND**, not the power-input V− terminal shown on some converters. Locate terminals by their labels; the diagram does not prescribe the terminal positions on every converter. Power the USR-DR164 from a **separate 12 V DC supply**: positive to **V+**, negative/return to **V−**. The yellow CASA conductor remains on **signal GND**; do not move it to V−. Do not power the converter from the CASA +5 V conductor. Keep the original CASA panel and safety mechanisms operational.
+
+## Separate 12 V DC power
+
+| Connection | USR-DR164 terminal |
+| --- | --- |
+| Separate supply +12 V DC | **V+** |
+| Separate supply negative/0 V return | **V−** |
+| CASA yellow signal reference | **GND**, not V− |
+
+Disconnect power before making connections. Check polarity, supply rating and the markings on your actual converter. **V− is the supply return; GND is the designated serial signal-reference terminal.** This distinction describes the external wiring and does not assert that the terminals are electrically isolated inside the converter.
+
+The [manufacturer's USR-DR164/162 manual](https://www.pusr.com/uploads/20241212/c0e4f462ecead06a7e47e13fee88a488.pdf) specifies a 5–36 V DC input range; the project uses a separate 12 V DC supply within that range. The manufacturer's voltage range is not permission to take power from the CASA connector. The RJ12 mapping above is the project's cable reference, not an independently certified manufacturer pinout.
 
 ## Serial profile
 

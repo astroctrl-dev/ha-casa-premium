@@ -16,8 +16,8 @@ The R120 wiring and serial profile are documented in the [hardware guide](hardwa
 
 | Component | Supported baseline |
 | --- | --- |
-| Home Assistant Core | Minimum 2026.11.2; this is the tested baseline |
-| HACS | Required for the documented HACS installation path |
+| Home Assistant Core | Tested on 2026.11.2; current release metadata requires 2026.11.2 |
+| Installation tool | Built-in Marketplace on Core 2026.11 and later; legacy HACS menus are documented separately |
 | Connection | Local transparent TCP server forwarding CASA RS-485 traffic |
 | Serial profile for the project R120 setup | 38400 baud, 8 data bits, no parity, 1 stop bit, no CTS/RTS |
 | Concurrent read-only Home Assistant instances | Tested with two instances monitoring the same CASA system |

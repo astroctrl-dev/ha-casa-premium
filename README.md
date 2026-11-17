@@ -17,7 +17,7 @@ This is an unofficial community integration. It does not send control or clock-s
 * **Local operation** — the integration connects directly to your converter; no cloud account is required for monitoring.
 * **Setup in the UI** — enter the converter’s address and port, and change them later from Configure/Options. No YAML is required for GUI setup.
 
-The available entities depend on the connected unit, firmware and received telegrams. One gateway is supported at a time.
+The available entities depend on the connected unit, firmware and received telegrams. One active gateway is supported per Home Assistant instance. Read-only monitoring of the same CASA system has been tested with two Home Assistant instances.
 
 ## What You Need
 

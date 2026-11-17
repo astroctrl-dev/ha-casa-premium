@@ -20,7 +20,8 @@ The R120 wiring and serial profile are documented in the [hardware guide](hardwa
 | HACS | Required for the documented HACS installation path |
 | Connection | Local transparent TCP server forwarding CASA RS-485 traffic |
 | Serial profile for the project R120 setup | 38400 baud, 8 data bits, no parity, 1 stop bit, no CTS/RTS |
-| Number of active gateways | One |
+| Active gateways per Home Assistant instance | One |
+| Multiple Home Assistant instances monitoring the same CASA system | Read-only operation tested with two instances |
 
 Newer Core releases may introduce compatibility changes. The integration cannot guarantee every unit/firmware/converter combination. Sensor availability depends on the telegrams actually received, and some service fields may be absent or differ across firmware.
 

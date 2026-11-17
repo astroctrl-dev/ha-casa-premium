@@ -41,7 +41,7 @@ Pack interval and size are transcribed from the project converter settings; chec
 
 Configure the converter as a **transparent TCP server**, with **Modbus disabled**. Use a stable address/hostname and TCP port **8899**, or choose another port consistently on both the converter and Home Assistant.
 
-Home Assistant must be able to connect to that local TCP port. The converter must provide the existing CASA serial telegram stream; the integration does not send polling or control telegrams to obtain missing values. Only one gateway is supported by the integration at a time. Check converter client capacity before sharing a gateway with another client.
+Home Assistant must be able to connect to that local TCP port. The converter must provide the existing CASA serial telegram stream; the integration does not send polling or control telegrams to obtain missing values. Each Home Assistant instance supports one active gateway. Read-only monitoring of the same CASA system has been tested with two Home Assistant instances. This does not establish support for multiple active gateways within one Home Assistant instance. If multiple clients share one converter, check its simultaneous TCP client capacity. Simultaneous control commands from multiple clients have not been tested and are outside this read-only release.
 
 The gateway connection does not use application-layer authentication or TLS. Keep it on a trusted local network. **Do not expose the gateway to the internet or configure router port forwarding for it.**
 

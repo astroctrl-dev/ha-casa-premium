@@ -58,7 +58,7 @@ See the [installation guide](docs/installation.md) for more information.
 
 | Guide | Description |
 | --- | --- |
-| [Installation and configuration](docs/installation.md) | Installation through HACS, initial setup and connection settings |
+| [Installation and configuration](docs/installation.md) | Marketplace/HACS installation, initial setup and connection settings |
 | [Wiring and converter settings](docs/hardware.md) | RJ12 connector, RS-485 wiring and converter configuration |
 | [Supported devices](docs/supported-devices.md) | Tested hardware and known compatibility limitations |
 | [Sensors and everyday use](docs/entities.md) | Available sensor information and how to use it |

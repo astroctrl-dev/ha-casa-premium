@@ -139,7 +139,7 @@ Temperature values follow Home Assistant's Celsius/Fahrenheit setting; an explic
 
 ## Beta 1.2.0b9 – connection diagnostics
 
-Four diagnostic stages distinguish TCP connectivity, incoming serial bytes, decoded CASA telegrams and fresh sensor readings. The **Serial bytes** indicator is green when bytes arrived within 10 seconds, yellow at 11–30 seconds and red after 30 seconds without traffic. It measures bytes received from the gateway over TCP, **not** whether RS-485 framing or CASA protocol settings are correct. The diagnostic state refreshes once per second.
+Four diagnostic stages distinguish TCP connectivity, incoming serial bytes, decoded CASA telegrams and fresh sensor readings. The **Serial bytes** indicator is blue (ok) when bytes arrived within the last 5 seconds, and red (error) when no bytes arrived for 5 seconds or more; there is no yellow intermediate state. It measures bytes received from the gateway over TCP, **not** whether RS-485 framing or CASA protocol settings are correct. The diagnostic state refreshes once per second.
 
 **CASA telegrams** requires successfully decoded recent telegrams; **Fresh sensor data** is green when all ten regularly expected fields were updated within 120 seconds, yellow when only some were updated, and red when none were updated. During startup or when TCP is disconnected, stages may show waiting/not measurable. No ICMP ping or new user configuration is introduced.
 

@@ -1804,6 +1804,10 @@
           "host": "Lokal adresse til RS-485-konverteren.",
           "port": "TCP-serverport på konverteren, normalt 8899."
         }
+      },
+      "save_anyway": {
+        "title": "Tilkoblinga kunne ikkje stadfestast",
+        "description": "CASA-kommunikasjon kunne ikkje stadfestast for {host}:{port}.\\n\\n{connection_status}\\n\\nDu kan likevel lagre IP-adresse og port og sjekke diagnostikk på integrasjonssida. Dette erstattar den tidlegare tilkoplinga. Lukk dialogen for å avbryte."
       }
     },
     "error": {

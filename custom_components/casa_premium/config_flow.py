@@ -8,6 +8,10 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
 from . import DOMAIN
+from .decoder import FrameParser, decode
+
+MIN_CONFIRM_SECONDS = 15
+MAX_CONFIRM_SECONDS = 60
 
 
 def _endpoint_schema(default_host="", default_port=8899):
@@ -46,6 +50,56 @@ async def _probe(host, port):
     return True
 
 
+async def _confirm_casa(host, port, *, minimum=MIN_CONFIRM_SECONDS,
+                        maximum=MAX_CONFIRM_SECONDS):
+    """Passively validate CASA data within one bounded 15–60 s window.
+
+    No commands are sent and no stored endpoint is changed. Cancellation
+    propagates so Home Assistant can stop an abandoned validation task.
+    """
+    loop = asyncio.get_running_loop()
+    started = loop.time()
+    deadline = started + maximum
+    writer = None
+    confirmed = False
+    try:
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(host, port),
+                timeout=min(5, max(0, deadline - loop.time())),
+            )
+            parser = FrameParser()
+            while loop.time() < deadline:
+                try:
+                    chunk = await asyncio.wait_for(
+                        reader.read(4096), timeout=max(0, deadline - loop.time())
+                    )
+                except asyncio.TimeoutError:
+                    break
+                if not chunk:
+                    break
+                if any(decode(frame) for frame in parser.feed(chunk)):
+                    confirmed = True
+                    break
+        except (OSError, asyncio.TimeoutError, ValueError):
+            confirmed = False
+        # Even an immediate TCP refusal remains Pending for at least 15 s.
+        remaining_minimum = started + minimum - loop.time()
+        if remaining_minimum > 0:
+            await asyncio.sleep(remaining_minimum)
+        return confirmed
+    finally:
+        if writer is not None:
+            writer.close()
+            # Socket cleanup must not extend the 60-second validation window.
+            remaining = deadline - loop.time()
+            if remaining > 0:
+                try:
+                    await asyncio.wait_for(writer.wait_closed(), timeout=remaining)
+                except (OSError, asyncio.TimeoutError):
+                    pass
+
+
 class CasaPremiumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Configure a CASA TCP gateway using Home Assistant UI."""
     VERSION = 1
@@ -57,7 +111,7 @@ class CasaPremiumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             port = user_input[CONF_PORT]
             if not _valid_host(host):
                 errors["base"] = "invalid_host"
-            elif not await _probe(host, port):
+            elif not await _confirm_casa(host, port):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(f"{host}:{port}")
@@ -75,27 +129,62 @@ class CasaPremiumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class CasaPremiumOptionsFlow(config_entries.OptionsFlow):
-    """Change the TCP endpoint without losing the last working settings."""
+    """Validate a candidate in HA's cancellable progress UI before saving."""
 
     def __init__(self, config_entry):
         self._entry = config_entry
+        self._candidate = None
+        self._validation_task = None
 
     async def async_step_init(self, user_input=None):
-        errors = {}
         current = {**self._entry.data, **self._entry.options}
-        if user_input is not None:
-            host, port = user_input[CONF_HOST], user_input[CONF_PORT]
-            if not _valid_host(host):
-                errors["base"] = "invalid_host"
-            elif (host, port) != (current[CONF_HOST], current[CONF_PORT]):
-                if not await _probe(host, port):
-                    errors["base"] = "cannot_connect"
-            if not errors:
-                return self.async_create_entry(title="", data=user_input)
+        if user_input is None:
+            return self.async_show_form(
+                step_id="init",
+                data_schema=_endpoint_schema(
+                    current.get(CONF_HOST, ""), current.get(CONF_PORT, 8899)
+                ),
+            )
+        host, port = user_input[CONF_HOST], user_input[CONF_PORT]
+        if not _valid_host(host):
+            return self.async_show_form(
+                step_id="init",
+                data_schema=_endpoint_schema(host, port),
+                errors={"base": "invalid_host"},
+            )
+        if (host, port) == (current[CONF_HOST], current[CONF_PORT]):
+            return self.async_create_entry(title="", data={})
+        self._candidate = dict(user_input)
+        self._validation_task = self.hass.async_create_task(_confirm_casa(host, port))
+        return await self.async_step_pending()
+
+    async def async_step_pending(self, user_input=None):
+        """Native HA progress dialog; Cancel aborts the flow without saving."""
+        if self._validation_task is None:
+            return self.async_abort(reason="unknown")
+        if not self._validation_task.done():
+            return self.async_show_progress(
+                step_id="pending",
+                progress_action="validate_connection",
+                progress_task=self._validation_task,
+            )
+        return self.async_show_progress_done(next_step_id="finish")
+
+    async def async_step_finish(self, user_input=None):
+        """Only commit options after a decoded CASA telegram was observed."""
+        task = self._validation_task
+        if task is None:
+            return self.async_abort(reason="unknown")
+        try:
+            confirmed = task.result()
+        except (asyncio.CancelledError, OSError, ValueError):
+            confirmed = False
+        if confirmed:
+            return self.async_create_entry(title="", data=self._candidate)
         return self.async_show_form(
             step_id="init",
             data_schema=_endpoint_schema(
-                current.get(CONF_HOST, ""), current.get(CONF_PORT, 8899)
+                self._candidate[CONF_HOST], self._candidate[CONF_PORT]
             ),
-            errors=errors,
+            errors={"base": "cannot_connect"},
         )

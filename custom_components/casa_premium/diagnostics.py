@@ -6,8 +6,7 @@ The thresholds are provisional until observed against the physical gateway.
 """
 from datetime import datetime, timezone
 
-RAW_GREEN_SECONDS = 10
-RAW_YELLOW_SECONDS = 30
+RAW_FRESH_SECONDS = 5
 FRAME_FRESH_SECONDS = 120
 SENSOR_FRESH_SECONDS = 120
 STARTUP_GRACE_SECONDS = 15
@@ -70,8 +69,7 @@ def health(hub, now=None):
         if active_raw_age is None:
             raw = "waiting" if startup_age is None or startup_age < STARTUP_GRACE_SECONDS else "error"
         else:
-            raw = ("ok" if active_raw_age <= RAW_GREEN_SECONDS else
-                   "degraded" if active_raw_age <= RAW_YELLOW_SECONDS else "error")
+            raw = "ok" if active_raw_age < RAW_FRESH_SECONDS else "error"
         if active_frame_age is None:
             frame = "waiting" if startup_age is None or startup_age < STARTUP_GRACE_SECONDS else "error"
         else:
@@ -87,13 +85,13 @@ def health(hub, now=None):
         # Only successfully decoded telegrams prove protocol communication.
         if active_decoded_age is None or active_decoded_age > FRAME_FRESH_SECONDS:
             if frame != "waiting":
-                frame = "degraded" if active_raw_age is not None and active_raw_age <= RAW_YELLOW_SECONDS else "error"
+                frame = "degraded" if active_raw_age is not None and active_raw_age < RAW_FRESH_SECONDS else "error"
     reasons = {
         "tcp": hub.diagnostic_last_error if not connected and hub.diagnostic_last_error else
                ("connected" if connected else "awaiting_connection"),
         "raw_bytes": "tcp_unavailable" if not connected else
                      ("no_traffic" if active_raw_age is None else
-                      "stale_traffic" if active_raw_age > RAW_YELLOW_SECONDS else "sporadic_traffic" if active_raw_age > RAW_GREEN_SECONDS else "receiving"),
+                      "stale_traffic" if active_raw_age >= RAW_FRESH_SECONDS else "receiving"),
         "telegram": "tcp_unavailable" if not connected else
                     ("no_valid_frames" if active_frame_age is None else
                      "no_decoded_data" if active_decoded_age is None else

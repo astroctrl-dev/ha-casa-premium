@@ -1130,6 +1130,111 @@
           "Supply": "Tilluft",
           "Extract": "Avtrekk"
         }
+      },
+      "diagnostic_tcp": {
+        "name": "TCP-forbindelse",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Redusert",
+          "error": "🔴 Feil",
+          "waiting": "⚪ Venter",
+          "not_measurable": "⚪ Kan ikke måles"
+        },
+        "state_attributes": {
+          "last_error": {
+            "name": "Siste feil"
+          },
+          "reason": {
+            "name": "Årsak"
+          }
+        }
+      },
+      "diagnostic_raw_bytes": {
+        "name": "Serielle råbytes",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Redusert",
+          "error": "🔴 Feil",
+          "waiting": "⚪ Venter",
+          "not_measurable": "⚪ Kan ikke måles"
+        },
+        "state_attributes": {
+          "raw_age_seconds": {
+            "name": "Alder rådata (s)"
+          },
+          "last_byte_at": {
+            "name": "Siste råbyte"
+          },
+          "received_bytes": {
+            "name": "Mottatte byte"
+          },
+          "reason": {
+            "name": "Årsak"
+          }
+        }
+      },
+      "diagnostic_telegram": {
+        "name": "CASA-telegrammer",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Redusert",
+          "error": "🔴 Feil",
+          "waiting": "⚪ Venter",
+          "not_measurable": "⚪ Kan ikke måles"
+        },
+        "state_attributes": {
+          "frame_age_seconds": {
+            "name": "Alder gyldig ramme (s)"
+          },
+          "decoded_age_seconds": {
+            "name": "Alder dekodede data (s)"
+          },
+          "last_frame_at": {
+            "name": "Siste gyldige ramme"
+          },
+          "last_decoded_at": {
+            "name": "Siste dekodede data"
+          },
+          "valid_frames": {
+            "name": "Gyldige rammer"
+          },
+          "decoded_frames": {
+            "name": "Dekodede rammer"
+          },
+          "crc_errors": {
+            "name": "CRC-feil"
+          },
+          "reason": {
+            "name": "Årsak"
+          }
+        }
+      },
+      "diagnostic_sensors": {
+        "name": "Ferske sensordata",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Redusert",
+          "error": "🔴 Feil",
+          "waiting": "⚪ Venter",
+          "not_measurable": "⚪ Kan ikke måles"
+        },
+        "state_attributes": {
+          "coverage_percent": {
+            "name": "Andel ferske sensorer (%)"
+          },
+          "fresh_sensors": {
+            "name": "Ferske sensorer"
+          },
+          "expected_sensors": {
+            "name": "Forventede sensorer"
+          },
+          "missing_critical": {
+            "name": "Manglende kritiske sensorer"
+          },
+          "reason": {
+            "name": "Årsak"
+          }
+        }
       }
     },
     "binary_sensor": {

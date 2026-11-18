@@ -1130,6 +1130,111 @@
           "Supply": "Supply air",
           "Extract": "Extract air"
         }
+      },
+      "diagnostic_tcp": {
+        "name": "TCP connection",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Degraded",
+          "error": "🔴 Error",
+          "waiting": "⚪ Waiting",
+          "not_measurable": "⚪ Not measurable"
+        },
+        "state_attributes": {
+          "last_error": {
+            "name": "Last error"
+          },
+          "reason": {
+            "name": "Reason"
+          }
+        }
+      },
+      "diagnostic_raw_bytes": {
+        "name": "Serial bytes",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Degraded",
+          "error": "🔴 Error",
+          "waiting": "⚪ Waiting",
+          "not_measurable": "⚪ Not measurable"
+        },
+        "state_attributes": {
+          "raw_age_seconds": {
+            "name": "Raw data age (s)"
+          },
+          "last_byte_at": {
+            "name": "Last byte at"
+          },
+          "received_bytes": {
+            "name": "Received bytes"
+          },
+          "reason": {
+            "name": "Reason"
+          }
+        }
+      },
+      "diagnostic_telegram": {
+        "name": "CASA telegrams",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Degraded",
+          "error": "🔴 Error",
+          "waiting": "⚪ Waiting",
+          "not_measurable": "⚪ Not measurable"
+        },
+        "state_attributes": {
+          "frame_age_seconds": {
+            "name": "Valid frame age (s)"
+          },
+          "decoded_age_seconds": {
+            "name": "Decoded data age (s)"
+          },
+          "last_frame_at": {
+            "name": "Last valid frame at"
+          },
+          "last_decoded_at": {
+            "name": "Last decoded data at"
+          },
+          "valid_frames": {
+            "name": "Valid frames"
+          },
+          "decoded_frames": {
+            "name": "Decoded frames"
+          },
+          "crc_errors": {
+            "name": "CRC errors"
+          },
+          "reason": {
+            "name": "Reason"
+          }
+        }
+      },
+      "diagnostic_sensors": {
+        "name": "Fresh sensor data",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Degraded",
+          "error": "🔴 Error",
+          "waiting": "⚪ Waiting",
+          "not_measurable": "⚪ Not measurable"
+        },
+        "state_attributes": {
+          "coverage_percent": {
+            "name": "Fresh sensor coverage (%)"
+          },
+          "fresh_sensors": {
+            "name": "Fresh sensors"
+          },
+          "expected_sensors": {
+            "name": "Expected sensors"
+          },
+          "missing_critical": {
+            "name": "Missing critical sensors"
+          },
+          "reason": {
+            "name": "Reason"
+          }
+        }
       }
     },
     "binary_sensor": {

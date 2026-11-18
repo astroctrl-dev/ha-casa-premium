@@ -1,6 +1,7 @@
 """CASA read-only numeric sensors."""
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.const import EntityCategory
 from . import DOMAIN, SERVICE_CONFIG
 from .entity import CasaEntity, configure_translation
 from .readback import SERVICE_NUMBERS, SERVICE_CHOICES, service_number_value, service_choice_value
@@ -54,7 +55,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                        [CasaCo2ThresholdSensor(hub, index) for index in (0, 1)] +
                        [CasaServiceNumberSensor(hub, description) for description in SERVICE_NUMBERS] +
                        [CasaSupplySetpointSensor(hub)] +
-                       [CasaServiceChoiceSensor(hub, description) for description in SERVICE_CHOICES])
+                       [CasaServiceChoiceSensor(hub, description) for description in SERVICE_CHOICES] +
+                       [CasaDiagnosticStatusSensor(hub, key) for key in ('tcp', 'raw_bytes', 'telegram', 'sensors')])
 
 
 class CasaServiceChoiceSensor(CasaEntity, SensorEntity):
@@ -404,3 +406,50 @@ class CasaCo2ThresholdSensor(CasaEntity, SensorEntity):
 async def async_setup_entry(hass, entry, async_add_entities):
     """Forwarded config-entry setup; preserve the same read-only entities."""
     await async_setup_platform(hass, {}, async_add_entities)
+
+
+class CasaDiagnosticStatusSensor(CasaEntity, SensorEntity):
+    """Four independent stages, updated by the existing receiver and timer."""
+    _attr_should_poll = False
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_options = ("ok", "degraded", "error", "waiting", "not_measurable")
+    _attr_icon = "mdi:lan-check"
+
+    def __init__(self, hub, key):
+        self.hub, self.key = hub, key
+        self._attr_unique_id = f"casa_premium_{hub.host}_diagnostic_{key}"
+        configure_translation(self, hub)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, hub.host)}, name="Swegon CASA Premium",
+            manufacturer="Swegon",
+        )
+
+    @property
+    def available(self):
+        # A disconnected gateway must still show its diagnostic error.
+        return True
+
+    @property
+    def native_value(self):
+        return self.hub.diagnostic_health()[self.key]
+
+    @property
+    def extra_state_attributes(self):
+        info = self.hub.diagnostic_health()
+        keys = {
+            "tcp": ("last_error",),
+            "raw_bytes": ("raw_age_seconds", "last_byte_at", "received_bytes"),
+            "telegram": ("frame_age_seconds", "decoded_age_seconds",
+                         "last_frame_at", "last_decoded_at", "valid_frames",
+                         "decoded_frames", "crc_errors"),
+            "sensors": ("coverage_percent", "fresh_sensors", "expected_sensors",
+                        "missing_critical"),
+        }[self.key]
+        details = {key: (value.isoformat() if hasattr(value, "isoformat") else value)
+                   for key in keys if (value := info[key]) is not None}
+        details["reason"] = info["reasons"][self.key]
+        return details
+
+    async def async_added_to_hass(self):
+        self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))

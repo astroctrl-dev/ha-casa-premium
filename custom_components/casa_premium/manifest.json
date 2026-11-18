@@ -1,7 +1,7 @@
 {
   "domain": "casa_premium",
   "name": "Swegon CASA Premium (RS-485 TCP)",
-  "version": "1.1.0",
+  "version": "1.2.0b1",
   "documentation": "https://github.com/astroctrl-dev/ha-casa-premium",
   "requirements": [],
   "dependencies": [],

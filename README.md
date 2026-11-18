@@ -8,7 +8,7 @@ Monitor temperatures, fan information and ventilation status from Home Assistant
 
 This is an unofficial community integration. It does not send control or clock-setting commands.
 
-## 1.2.0b1 pre-release
+## 1.2.0b2 pre-release
 
 This opt-in beta adds four read-only diagnostic states on the CASA device: TCP connection, serial bytes, decoded CASA telegrams and fresh sensor coverage. They start automatically after saving the gateway address and port. States include colored symbols and text, with last data times, ages and reasons. The timing thresholds are being checked against a physical installation; please report unexpected states in Issues. The stable release remains 1.1.0.
 

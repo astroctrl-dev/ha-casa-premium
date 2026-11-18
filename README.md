@@ -135,3 +135,16 @@ We acknowledge and appreciate the earlier work of the openHAB community.
 English, Norwegian Bokmål and Norwegian Nynorsk are included. Entity names use Home Assistant's server language when created; states and dialogs use the interface language. Existing entity IDs and manually assigned names are preserved. English is the fallback for other languages.
 
 Temperature values follow Home Assistant's Celsius/Fahrenheit setting; an explicit unit choice on an individual sensor takes priority. See [languages and units](docs/languages-and-units.md) for details and automation considerations.
+
+
+## Beta 1.2.0b9 – connection diagnostics
+
+Four diagnostic stages distinguish TCP connectivity, incoming serial bytes, decoded CASA telegrams and fresh sensor readings. The **Serial bytes** indicator is green when bytes arrived within 10 seconds, yellow at 11–30 seconds and red after 30 seconds without traffic. It measures bytes received from the gateway over TCP, **not** whether RS-485 framing or CASA protocol settings are correct. The diagnostic state refreshes once per second.
+
+**CASA telegrams** requires successfully decoded recent telegrams; **Fresh sensor data** is green when all ten regularly expected fields were updated within 120 seconds, yellow when only some were updated, and red when none were updated. During startup or when TCP is disconnected, stages may show waiting/not measurable. No ICMP ping or new user configuration is introduced.
+
+If TCP and Serial bytes are green but CASA telegrams are not, check gateway baud rate, data bits, parity, stop bits, RS-485 wiring and protocol compatibility. These time thresholds are preliminary and will be calibrated using observed CASA traffic.
+
+### Beta installation
+
+Use the public HACS repository `https://github.com/astroctrl-dev/ha-casa-premium` and select the published prerelease `v1.2.0b9` when available. Back up your HA configuration, install the selected beta, restart Home Assistant, and verify the four diagnostic states. To roll back, reinstall the previously working release and restart HA. The release must be explicitly published before HACS can install this beta.

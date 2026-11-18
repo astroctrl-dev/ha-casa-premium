@@ -15,6 +15,8 @@ This is an unofficial community integration. It does not send control or clock-s
 * **Status and alarms** — see the ventilation mode, reported functions and alarm indicators.
 * **Readable service settings** — inspect available settings without changing the unit.
 * **Local operation** — the integration connects directly to your converter; no cloud account is required for monitoring.
+* **Your language** — English, Norwegian Bokmål and Norwegian Nynorsk for names, states and setup dialogs.
+* **Your temperature unit** — Celsius or Fahrenheit using Home Assistant's temperature settings, including temperature differences.
 * **Setup in the UI** — enter the converter’s address and port, and change them later from Configure/Options. No YAML is required for GUI setup.
 
 The available entities depend on the connected unit, firmware and received telegrams. One active gateway is supported per Home Assistant instance. Read-only monitoring of the same CASA system has been tested with two Home Assistant instances.
@@ -23,10 +25,10 @@ The available entities depend on the connected unit, firmware and received teleg
 
 | Component | Requirement |
 | --- | --- |
-| Ventilation unit | Swegon CASA R120 with Premium controller is the tested project installation. Other models may be compatible but have not been verified. |
+| Ventilation unit | Swegon CASA R120 with Premium controller is the tested project installation. Compatibility is confirmed for this project installation; other model/controller combinations may differ. |
 | Converter | RS-485 to TCP/IP, configured as a transparent TCP server |
 | Serial connection | Tested R120 configuration: 38400 baud, 8N1, no hardware flow control |
-| Home Assistant | Tested on Core 2026.11.2. Earlier versions may also work but have not been tested. |
+| Home Assistant | Requires Core 2026.11.2 or later; project verification baseline is 2026.11.2. |
 | Installation | Home Assistant Marketplace on Core 2026.11 and later; legacy HACS menus are documented separately |
 | Network | Home Assistant must be able to reach the converter’s local IP address and TCP port, normally 8899 |
 
@@ -40,7 +42,7 @@ Keep the original CASA control panel connected so that the required serial commu
 2. On Home Assistant Core 2026.11 and later, open **Settings → Marketplace → Add from link**.
 3. Enter `https://github.com/astroctrl-dev/ha-casa-premium`, select **Add**, and choose **Integration** if asked.
 4. Open **Swegon CASA Premium**, select the intended release and install it.
-5. Follow any restart prompt. For this first release, validate your Home Assistant configuration and perform a full Home Assistant Core restart before setup.
+5. Follow any restart prompt. For this release, validate your Home Assistant configuration and perform a full Home Assistant Core restart before setup.
 6. Navigate to **Settings → Devices & services → Add integration**.
 7. Search for **Swegon CASA Premium**.
 8. Enter the IP address or hostname of your RS-485 converter and its TCP port, normally **8899**.
@@ -123,3 +125,9 @@ Building on this knowledge, we captured serial communication from a CASA ventila
 This process helped us identify message types, data fields and sensor values, forming the foundation for the CASA Premium integration for Home Assistant.
 
 We acknowledge and appreciate the earlier work of the openHAB community.
+
+## Languages and temperature units
+
+English, Norwegian Bokmål and Norwegian Nynorsk are included. Entity names use Home Assistant's server language when created; states and dialogs use the interface language. Existing entity IDs and manually assigned names are preserved. English is the fallback for other languages.
+
+Temperature values follow Home Assistant's Celsius/Fahrenheit setting; an explicit unit choice on an individual sensor takes priority. See [languages and units](docs/languages-and-units.md) for details and automation considerations.

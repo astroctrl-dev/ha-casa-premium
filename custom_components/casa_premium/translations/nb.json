@@ -13,6 +13,1631 @@
           "fireplace_10": "Peisfunksjon 10 min (status)"
         }
       }
+    },
+    "sensor": {
+      "outdoor_temp": {
+        "name": "T1 · Utelufttemperatur"
+      },
+      "supply_temp": {
+        "name": "T2 · Tilluft / frostbeskyttelse"
+      },
+      "extract_temp": {
+        "name": "T3 · Avtrekkstemperatur"
+      },
+      "supply_temp_heated": {
+        "name": "T4 · Tilluft etter oppvarming"
+      },
+      "t5": {
+        "name": "T5 · Avkast etter varmegjenvinner"
+      },
+      "t6": {
+        "name": "T6 · Overtemperaturføler for ettervarmer"
+      },
+      "t7": {
+        "name": "T7 · Rå temperaturverdi"
+      },
+      "exhaust_temp": {
+        "name": "T8 · Romtemperatur"
+      },
+      "afterheating_supply_setpoint": {
+        "name": "Ettervarme: tilluftssettpunkt (uverifisert)"
+      },
+      "afterheating_room_setpoint": {
+        "name": "Ønsket romtemperatur"
+      },
+      "supply_fan_rpm": {
+        "name": "Tilluftsviftens turtall"
+      },
+      "extract_fan_rpm": {
+        "name": "Avtrekksviftens turtall"
+      },
+      "efficiency": {
+        "name": "Varmegjenvinningens virkningsgrad"
+      },
+      "efficiency_supply_calc": {
+        "name": "Beregnet virkningsgrad for tilluft"
+      },
+      "efficiency_extract_calc": {
+        "name": "Beregnet virkningsgrad for avtrekk"
+      },
+      "co2": {
+        "name": "CO2"
+      },
+      "humidity": {
+        "name": "Relativ luftfuktighet"
+      },
+      "operating_mode": {
+        "name": "Driftsmodus (protokollverdi)"
+      },
+      "unit_state": {
+        "name": "Aggregattilstand (protokollverdi)"
+      },
+      "fan_speed": {
+        "name": "Viftehastighet"
+      },
+      "supply_fan_virtual_speed": {
+        "name": "Virtuell tilluftsviftehastighet"
+      },
+      "extract_fan_virtual_speed": {
+        "name": "Virtuell avtrekksviftehastighet"
+      },
+      "unit_status": {
+        "name": "Aggregatstatus (protokollverdi)"
+      },
+      "model": {
+        "name": "Modell"
+      },
+      "firmware_rc": {
+        "name": "Fastvare RC"
+      },
+      "firmware_fst": {
+        "name": "Fastvare FST"
+      },
+      "mode_actual": {
+        "name": "Bekreftet ventilasjonsmodus",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "boost_duration_minutes": {
+            "name": "Forseringsvarighet (minutter)"
+          },
+          "sync_status": {
+            "name": "Bekreftelsesstatus",
+            "state": {
+              "unavailable": "Utilgjengelig",
+              "not_confirmed": "Ikke bekreftet",
+              "synced": "Bekreftet",
+              "send_failed": "Sending mislyktes",
+              "pending": "Venter på bekreftelse"
+            }
+          },
+          "pending_mode": {
+            "name": "Ventilasjonsmodus som venter på bekreftelse",
+            "state": {
+              "Away": "Borte",
+              "Home": "Hjemme",
+              "Boost 30": "Forsering 30 min",
+              "Boost 60": "Forsering 60 min",
+              "Boost 120": "Forsering 120 min",
+              "Boost permanent": "Permanent forsering",
+              "Fireplace 10": "Peisfunksjon 10 min (status)"
+            }
+          }
+        },
+        "state": {
+          "Away": "Borte",
+          "Home": "Hjemme",
+          "Boost 30": "Forsering 30 min",
+          "Boost 60": "Forsering 60 min",
+          "Boost 120": "Forsering 120 min",
+          "Boost permanent": "Permanent forsering",
+          "Fireplace 10": "Peisfunksjon 10 min (status)"
+        }
+      },
+      "clock": {
+        "name": "Klokke",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "observed_at": {
+            "name": "Observert tidspunkt"
+          }
+        }
+      },
+      "weekday": {
+        "name": "Ukedag",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "observed_at": {
+            "name": "Observert tidspunkt"
+          }
+        },
+        "state": {
+          "Monday": "Mandag",
+          "Tuesday": "Tirsdag",
+          "Wednesday": "Onsdag",
+          "Thursday": "Torsdag",
+          "Friday": "Fredag",
+          "Saturday": "Lørdag",
+          "Sunday": "Søndag"
+        }
+      },
+      "clock_drift": {
+        "name": "Klokkeavvik",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "observed_at": {
+            "name": "Observert tidspunkt"
+          }
+        }
+      },
+      "temperature_index_01_unknown": {
+        "name": "Temperatur indeks 01 (ukjent)",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "telegram_index": {
+            "name": "Telegramindeks"
+          },
+          "status": {
+            "name": "Identifikasjonsstatus",
+            "state": {
+              "Ukjent – ikke identifisert i betjeningspanelet": "Ukjent – ikke identifisert i betjeningspanelet"
+            }
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          }
+        }
+      },
+      "service_co2_threshold_home": {
+        "name": "Service: CO2-grense hjemme"
+      },
+      "service_co2_threshold_boost": {
+        "name": "Service: CO2-grense forsering"
+      },
+      "service_supply_fan_1": {
+        "name": "Service: Tilluftsvifte nivå 1",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_supply_fan_2": {
+        "name": "Service: Tilluftsvifte nivå 2",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_supply_fan_3": {
+        "name": "Service: Tilluftsvifte nivå 3",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_supply_fan_4": {
+        "name": "Service: Tilluftsvifte nivå 4",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_supply_fan_5": {
+        "name": "Service: Tilluftsvifte nivå 5",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_extract_fan_1": {
+        "name": "Service: Avtrekksvifte nivå 1",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_extract_fan_2": {
+        "name": "Service: Avtrekksvifte nivå 2",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_extract_fan_3": {
+        "name": "Service: Avtrekksvifte nivå 3",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_extract_fan_4": {
+        "name": "Service: Avtrekksvifte nivå 4",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_extract_fan_5": {
+        "name": "Service: Avtrekksvifte nivå 5",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_profile_0": {
+        "name": "Service: Vifteprofil borte",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_profile_1": {
+        "name": "Service: Vifteprofil hjemme",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_profile_2": {
+        "name": "Service: Vifteprofil forsering",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_profile_3": {
+        "name": "Service: Vifteprofil oppvarming",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_profile_4": {
+        "name": "Service: Vifteprofil kjøling",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "service_profile_5": {
+        "name": "Service: Vifteprofil aktiv kjølefunksjon",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "functions_service_interval_months": {
+        "name": "Funksjoner: Intervall for servicepåminnelse",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "unit_of_measurement": "måneder"
+      },
+      "functions_summer_night_cooling_temperature_difference": {
+        "name": "Funksjoner: Temperaturforskjell for sommernattkjøling",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "functions_summer_night_cooling_temperature_limit": {
+        "name": "Funksjoner: Temperaturgrense for sommernattkjøling",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "functions_heating_temperature_limit": {
+        "name": "Funksjoner: Temperaturgrense for oppvarming",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "functions_heating_p": {
+        "name": "Funksjoner: Tilluftsregulator P",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "functions_heating_i": {
+        "name": "Funksjoner: Tilluftsregulator I",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "functions_heating_d": {
+        "name": "Funksjoner: Tilluftsregulator D",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "functions_filter_monitor_delay": {
+        "name": "Funksjoner: Forsinkelse for filtervakt",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "functions_sa_limit_minimum_supply_temperature": {
+        "name": "Funksjoner: Laveste tilluftstemperatur",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "functions_sa_limit_setpoint_difference": {
+        "name": "Funksjoner: Avvik fra ønsket tilluftstemperatur",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "functions_electric_air_heater_temperature_temperature_setpoint": {
+        "name": "Funksjoner: Ønsket temperatur for elektrisk luftvarmer",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "summer_cooling_temperature": {
+        "name": "Temperatur for sommerkjøling",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "byte_width": {
+            "name": "Bytebredde"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "supply_air_temperature_setpoint": {
+        "name": "Ønsket tilluftstemperatur",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "telegram_index": {
+            "name": "Telegramindeks"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        }
+      },
+      "summer_cooling_fan": {
+        "name": "Viftevalg for sommerkjøling",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "No Change": "Uendret",
+          "Away": "Borte",
+          "Home": "Hjemme",
+          "Boost": "Forsering",
+          "Cooling": "Kjøling"
+        }
+      },
+      "functions_heating_control": {
+        "name": "Funksjoner: Temperaturregulering",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "Supply": "Tilluft",
+          "Extract": "Avtrekk"
+        }
+      }
+    },
+    "binary_sensor": {
+      "heating": {
+        "name": "Oppvarming aktiv",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "cooling": {
+        "name": "Kjøling aktiv",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "bypass": {
+        "name": "Forbikobling av varmegjenvinner",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "freeze_protection": {
+        "name": "Frostbeskyttelse",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "preheat": {
+        "name": "Forvarming aktiv",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "chilling": {
+        "name": "Aktiv kjølefunksjon",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "preheater_overheat": {
+        "name": "Overtemperatur i forvarmer",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "reheat": {
+        "name": "Ettervarming aktiv",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "fireplace": {
+        "name": "Peisfunksjon aktiv",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "underpressure_compensation": {
+        "name": "Undertrykkskompensering",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "external_boost": {
+        "name": "Ekstern forsering",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "humidity_boost": {
+        "name": "Fuktstyrt forsering",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "co2_boost": {
+        "name": "CO2-styrt forsering",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "defrosting": {
+        "name": "Avriming aktiv",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "defrost_starter": {
+        "name": "Avrimingsstart",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "tf_stop": {
+        "name": "Tilluftsvifte stoppet",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "external_boost_function": {
+        "name": "Ekstern forseringsfunksjon",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "external_fireplace_function": {
+        "name": "Ekstern peisfunksjon",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "filter_guard_status": {
+        "name": "Filtervaktstatus",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "ir_freeze_protection": {
+        "name": "Frostbeskyttelse for varmegjenvinner",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "emergency_stop": {
+        "name": "Nødstopp",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "reheating_freezing_alarm": {
+        "name": "Frostalarm for ettervarmer",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "reheating_overheat_alarm": {
+        "name": "Overtemperaturalarm for ettervarmer",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "ir_sensor_failure": {
+        "name": "Feil på varmegjenvinnerføler",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "supply_fan_failure": {
+        "name": "Feil på tilluftsvifte",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "extract_fan_failure": {
+        "name": "Feil på avtrekksvifte",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "temperature_deviation_failure": {
+        "name": "Temperaturavviksfeil",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "efficiency_alarm": {
+        "name": "Alarm for varmegjenvinningens virkningsgrad",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "filter_guard_alarm": {
+        "name": "Filtervaktalarm",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "service_reminder": {
+        "name": "Servicepåminnelse",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "temperature_failure": {
+        "name": "Feil på temperaturføler",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "service_co2_control_status": {
+        "name": "Service: CO2-regulering",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "service_external_control_status": {
+        "name": "Service: Ekstern styring",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "functions_service_reminder": {
+        "name": "Funksjoner: Servicepåminnelse",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "functions_summer_night_cooling": {
+        "name": "Funksjoner: Sommernattkjøling",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "functions_heating": {
+        "name": "Funksjoner: Oppvarming",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "functions_filter_monitor": {
+        "name": "Funksjoner: Filtervakt",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "functions_fireplace_function": {
+        "name": "Funksjoner: Peisfunksjon konfigurert",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "functions_boost_special": {
+        "name": "Funksjoner: Spesialforsering konfigurert",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "functions_electric_air_heater": {
+        "name": "Funksjoner: Elektrisk luftvarmer",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "service_weekly_schedule": {
+        "name": "Service: Ukemeny tilgjengelig",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "byte_offset": {
+            "name": "Byteforskyvning"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "temperature_setting": {
+        "name": "Temperaturmeny tilgjengelig",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      },
+      "week_schedule_enabled": {
+        "name": "Ukeprogram aktivert",
+        "state_attributes": {
+          "source": {
+            "name": "Protokollkilde"
+          },
+          "read_only": {
+            "name": "Kun lesing",
+            "state": {
+              "true": "Ja",
+              "false": "Nei"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Grunnlag for datatolkning",
+            "state": {
+              "existing_code; physical_verification_pending": "Eksisterende datatolkning; fysisk verifisering gjenstår"
+            }
+          }
+        },
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
+      }
     }
   },
   "config": {
@@ -23,6 +1648,10 @@
         "data": {
           "host": "IP-adresse eller vertsnavn",
           "port": "TCP-port"
+        },
+        "data_description": {
+          "host": "Lokal adresse til RS-485-konverteren.",
+          "port": "TCP-serverport på konverteren, normalt 8899."
         }
       }
     },
@@ -42,6 +1671,10 @@
         "data": {
           "host": "IP-adresse eller vertsnavn",
           "port": "TCP-port"
+        },
+        "data_description": {
+          "host": "Lokal adresse til RS-485-konverteren.",
+          "port": "TCP-serverport på konverteren, normalt 8899."
         }
       }
     },

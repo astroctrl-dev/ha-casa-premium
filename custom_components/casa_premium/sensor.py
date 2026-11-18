@@ -1,8 +1,14 @@
 """CASA read-only numeric sensors."""
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from . import DOMAIN, SERVICE_CONFIG
+from .entity import CasaEntity, configure_translation
 from .readback import SERVICE_NUMBERS, SERVICE_CHOICES, service_number_value, service_choice_value
+
+TEMPERATURE_DIFFERENCES = frozenset({
+    'functions_summer_night_cooling_temperature_difference',
+    'functions_sa_limit_setpoint_difference',
+})
 
 TEMPERATURES = ('outdoor_temp','supply_temp','extract_temp','supply_temp_heated','t5','t6','t7','exhaust_temp','afterheating_supply_setpoint','afterheating_room_setpoint')
 TEMP_NAMES = {
@@ -51,15 +57,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                        [CasaServiceChoiceSensor(hub, description) for description in SERVICE_CHOICES])
 
 
-class CasaServiceChoiceSensor(SensorEntity):
+class CasaServiceChoiceSensor(CasaEntity, SensorEntity):
     """Observed menu choice without a selectable control."""
+    _attr_device_class = SensorDeviceClass.ENUM
     _attr_should_poll = False
     _attr_icon = 'mdi:cog-outline'
 
     def __init__(self, hub, description):
         self.hub, self.description = hub, description
-        self._attr_name = 'CASA ' + description.name
+        self._attr_options = list(dict(description.choices).values())
         self._attr_unique_id = f'casa_premium_{hub.host}_{description.key}'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)},
                                             name='Swegon CASA Premium', manufacturer='Swegon')
 
@@ -81,19 +89,53 @@ class CasaServiceChoiceSensor(SensorEntity):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
 
 
-class CasaServiceNumberSensor(SensorEntity):
+class CasaServiceNumberSensor(CasaEntity, SensorEntity):
     """Observed configuration value; deliberately has no write method."""
     _attr_should_poll = False
     _attr_icon = 'mdi:cog-outline'
 
     def __init__(self, hub, description):
         self.hub, self.description = hub, description
-        self._attr_name = 'CASA ' + description.name
         self._attr_unique_id = f'casa_premium_{hub.host}_{description.key}'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)},
                                             name='Swegon CASA Premium', manufacturer='Swegon')
-        if description.unit:
+        if description.unit and description.unit != 'months':
             self._attr_native_unit_of_measurement = description.unit
+        if description.unit == '°C':
+            self._attr_device_class = (SensorDeviceClass.TEMPERATURE_DELTA
+                                       if description.key in TEMPERATURE_DIFFERENCES
+                                       else SensorDeviceClass.TEMPERATURE)
+
+    async def async_prepare_to_add_to_hass(self):
+        """Do not pin a legacy unclassified Celsius value as a user override.
+
+        SensorEntity's legacy-unit migration otherwise keeps the old Celsius
+        unit on upgrades. The user explicitly requested following HA's unit
+        system. Entity's normal preparation is retained, and HA still reads
+        explicit per-entity unit options when adding the entity.
+        """
+        if self.description.unit == '°C':
+            await Entity.async_prepare_to_add_to_hass(self)
+        else:
+            await super().async_prepare_to_add_to_hass()
+
+    def get_initial_entity_options(self):
+        """Keep temperature differences dynamic, instead of saving a unit.
+
+        HA 2026.11 converts deltas correctly but does not apply the legacy
+        dynamic system-temperature rule to TEMPERATURE_DELTA. Leave its
+        default unpinned; an explicit user unit override still wins in HA.
+        """
+        if self.description.key in TEMPERATURE_DIFFERENCES:
+            return None
+        return super().get_initial_entity_options()
+
+    @property
+    def native_unit_of_measurement(self):
+        if self.description.key in TEMPERATURE_DIFFERENCES:
+            return self.hub.hass.config.units.temperature_unit
+        return getattr(self, '_attr_native_unit_of_measurement', None)
 
     @property
     def available(self):
@@ -101,7 +143,12 @@ class CasaServiceNumberSensor(SensorEntity):
 
     @property
     def native_value(self):
-        return service_number_value(self.hub, self.description)
+        value = service_number_value(self.hub, self.description)
+        if (value is not None and self.description.key in TEMPERATURE_DIFFERENCES
+                and self.native_unit_of_measurement == '°F'):
+            # Interval conversion has no zero-point offset; protocol stays °C.
+            return value * 9 / 5
+        return value
 
     @property
     def extra_state_attributes(self):
@@ -119,16 +166,16 @@ class CasaServiceNumberSensor(SensorEntity):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
 
 
-class CasaSupplySetpointSensor(SensorEntity):
+class CasaSupplySetpointSensor(CasaEntity, SensorEntity):
     """0x4D index 0 setpoint, independent of the index 1 menu status."""
     _attr_should_poll = False
-    _attr_name = 'CASA Supply Air Temperature Setpoint'
     _attr_native_unit_of_measurement = '°C'
     _attr_device_class = SensorDeviceClass.TEMPERATURE
 
     def __init__(self, hub):
         self.hub = hub
         self._attr_unique_id = f'casa_premium_{hub.host}_supply_air_temperature_setpoint'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)},
                                             name='Swegon CASA Premium', manufacturer='Swegon')
 
@@ -148,12 +195,12 @@ class CasaSupplySetpointSensor(SensorEntity):
     async def async_added_to_hass(self):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
 
-class CasaSensor(SensorEntity):
+class CasaSensor(CasaEntity, SensorEntity):
     _attr_should_poll = False
     def __init__(self, hub, key):
         self.hub, self.key = hub, key
-        self._attr_name = 'CASA ' + TEMP_NAMES.get(key, OTHER_NAMES.get(key, key.replace('_', ' ').title()))
         self._attr_unique_id = f'casa_premium_{hub.host}_{key}'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)}, name='Swegon CASA Premium', manufacturer='Swegon')
         if key in TEMPERATURES:
             self._attr_native_unit_of_measurement = '°C'
@@ -180,15 +227,18 @@ class CasaSensor(SensorEntity):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
 
 
-class CasaActualModeSensor(SensorEntity):
+class CasaActualModeSensor(CasaEntity, SensorEntity):
     """Confirmed real mode from two consecutive 0x73 status frames."""
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["Away", "Home", "Boost 30", "Boost 60", "Boost 120",
+                     "Boost permanent", "Fireplace 10"]
     _attr_should_poll = False
-    _attr_name = 'CASA Ventilation Mode Actual'
     _attr_icon = 'mdi:hvac'
 
     def __init__(self, hub):
         self.hub = hub
         self._attr_unique_id = f'casa_premium_{hub.host}_mode_actual'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, hub.host)}, name='Swegon CASA Premium',
             manufacturer='Swegon')
@@ -214,7 +264,7 @@ class CasaActualModeSensor(SensorEntity):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
 
 
-class CasaClockSensor(SensorEntity):
+class CasaClockSensor(CasaEntity, SensorEntity):
     """Read-only diagnostics from unsolicited CASA 0x55 clock reports."""
     _attr_should_poll = False
 
@@ -226,13 +276,17 @@ class CasaClockSensor(SensorEntity):
             "weekday": "CASA Weekday",
             "clock_drift": "CASA Clock Drift",
         }
-        self._attr_name = names[key]
         self._attr_unique_id = f"casa_premium_{hub.host}_{key}"
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, hub.host)},
             name="Swegon CASA Premium",
             manufacturer="Swegon",
         )
+        if key == "weekday":
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = ["Monday", "Tuesday", "Wednesday", "Thursday",
+                                  "Friday", "Saturday", "Sunday"]
         if key == "clock":
             self._attr_icon = "mdi:clock-outline"
         elif key == "weekday":
@@ -278,10 +332,9 @@ class CasaClockSensor(SensorEntity):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
 
 
-class CasaUnknownTemperatureIndex01(SensorEntity):
+class CasaUnknownTemperatureIndex01(CasaEntity, SensorEntity):
     """Unidentified 0x4D index 01 temperature; read-only diagnostic."""
     _attr_should_poll = False
-    _attr_name = 'CASA Temperature Index 01 (Ukjent)'
     _attr_native_unit_of_measurement = '°C'
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -290,6 +343,7 @@ class CasaUnknownTemperatureIndex01(SensorEntity):
     def __init__(self, hub):
         self.hub = hub
         self._attr_unique_id = f'casa_premium_{hub.host}_temperature_index_01_unknown'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, hub.host)},
             name='Swegon CASA Premium',
@@ -319,7 +373,7 @@ class CasaUnknownTemperatureIndex01(SensorEntity):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
 
 
-class CasaCo2ThresholdSensor(SensorEntity):
+class CasaCo2ThresholdSensor(CasaEntity, SensorEntity):
     _attr_should_poll = False
     _attr_native_unit_of_measurement = 'ppm'
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -328,8 +382,8 @@ class CasaCo2ThresholdSensor(SensorEntity):
     def __init__(self, hub, index):
         self.hub, self.index = hub, index
         name = 'Home' if index == 0 else 'Boost'
-        self._attr_name = f'CASA Service CO2 {name} Threshold'
         self._attr_unique_id = f'casa_premium_{hub.host}_service_co2_threshold_{name.lower()}'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)},
                                             name='Swegon CASA Premium', manufacturer='Swegon')
 

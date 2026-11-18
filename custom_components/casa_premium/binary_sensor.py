@@ -2,6 +2,7 @@
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.entity import DeviceInfo
 from . import DOMAIN, SERVICE_CONFIG
+from .entity import CasaEntity, configure_translation
 from .readback import SERVICE_FLAGS, service_choice_value
 
 FLAGS = ('heating','cooling','bypass','freeze_protection','preheat','chilling','preheater_overheat','reheat','fireplace','underpressure_compensation','external_boost','humidity_boost','co2_boost','defrosting','defrost_starter','tf_stop','external_boost_function','external_fireplace_function','filter_guard_status','ir_freeze_protection','emergency_stop','reheating_freezing_alarm','reheating_overheat_alarm','ir_sensor_failure','supply_fan_failure','extract_fan_failure','temperature_deviation_failure','efficiency_alarm','filter_guard_alarm','service_reminder','temperature_failure')
@@ -53,15 +54,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     ])
 
 
-class CasaFunctionStatus(BinarySensorEntity):
+class CasaFunctionStatus(CasaEntity, BinarySensorEntity):
     """Read-only function configuration, distinct from active alarm/status bits."""
     _attr_should_poll = False
     _attr_icon = 'mdi:cog-outline'
 
     def __init__(self, hub, description):
         self.hub, self.description = hub, description
-        self._attr_name = 'CASA ' + description.name
         self._attr_unique_id = f'casa_premium_{hub.host}_{description.key}'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)},
                                             name='Swegon CASA Premium', manufacturer='Swegon')
 
@@ -83,15 +84,14 @@ class CasaFunctionStatus(BinarySensorEntity):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
 
 
-class CasaMenuStatus(BinarySensorEntity):
+class CasaMenuStatus(CasaEntity, BinarySensorEntity):
     """Independent temperature-menu availability and week-schedule master."""
     _attr_should_poll = False
 
     def __init__(self, hub, key):
         self.hub, self.key = hub, key
-        self._attr_name = ('CASA Temperature Menu Available' if key == 'temperature_setting'
-                           else 'CASA Week Schedule Enabled')
         self._attr_unique_id = f'casa_premium_{hub.host}_{key}'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)},
                                             name='Swegon CASA Premium', manufacturer='Swegon')
 
@@ -115,12 +115,12 @@ class CasaMenuStatus(BinarySensorEntity):
     async def async_added_to_hass(self):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
 
-class CasaBinarySensor(BinarySensorEntity):
+class CasaBinarySensor(CasaEntity, BinarySensorEntity):
     _attr_should_poll = False
     def __init__(self, hub, key):
         self.hub, self.key = hub, key
-        self._attr_name = 'CASA ' + BINARY_NAMES.get(key, key.replace('_', ' ').title())
         self._attr_unique_id = f'casa_premium_{hub.host}_{key}'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)}, name='Swegon CASA Premium', manufacturer='Swegon')
 
     @property
@@ -135,15 +135,14 @@ class CasaBinarySensor(BinarySensorEntity):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
 
 
-class CasaServiceStatus(BinarySensorEntity):
+class CasaServiceStatus(CasaEntity, BinarySensorEntity):
     _attr_should_poll = False
     _attr_icon = 'mdi:cog-outline'
 
     def __init__(self, hub, key):
         self.hub, self.key = hub, key
-        self._attr_name = ('CASA Service CO2 Control' if key == 'co2_control'
-                           else 'CASA Service External Control')
         self._attr_unique_id = f'casa_premium_{hub.host}_service_{key}_status'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)},
                                             name='Swegon CASA Premium', manufacturer='Swegon')
 

@@ -1,12 +1,1657 @@
 {
+  "entity": {
+    "select": {
+      "ventilation_mode": {
+        "name": "Ventilation Mode",
+        "state": {
+          "away": "Away",
+          "home": "Home",
+          "boost_30": "Boost 30 min",
+          "boost_60": "Boost 60 min",
+          "boost_120": "Boost 120 min",
+          "boost_permanent": "Permanent Boost",
+          "fireplace_10": "Fireplace 10 min (status)"
+        }
+      }
+    },
+    "sensor": {
+      "outdoor_temp": {
+        "name": "T1 · Outdoor Air Temperature"
+      },
+      "supply_temp": {
+        "name": "T2 · Supply Air / Frost Protection"
+      },
+      "extract_temp": {
+        "name": "T3 · Extract Air Temperature"
+      },
+      "supply_temp_heated": {
+        "name": "T4 · Supply Air After Heating"
+      },
+      "t5": {
+        "name": "T5 · Exhaust Air After Heat Exchanger"
+      },
+      "t6": {
+        "name": "T6 · Reheater Overtemperature Sensor"
+      },
+      "t7": {
+        "name": "T7 · Raw Temperature Value"
+      },
+      "exhaust_temp": {
+        "name": "T8 · Room Temperature"
+      },
+      "afterheating_supply_setpoint": {
+        "name": "Afterheating Supply Setpoint (Unverified)"
+      },
+      "afterheating_room_setpoint": {
+        "name": "Room Temperature Setpoint"
+      },
+      "supply_fan_rpm": {
+        "name": "Supply Fan RPM"
+      },
+      "extract_fan_rpm": {
+        "name": "Extract Fan RPM"
+      },
+      "efficiency": {
+        "name": "Heat Recovery Efficiency"
+      },
+      "efficiency_supply_calc": {
+        "name": "Supply Air Efficiency (Calculated)"
+      },
+      "efficiency_extract_calc": {
+        "name": "Extract Air Efficiency (Calculated)"
+      },
+      "co2": {
+        "name": "CO2"
+      },
+      "humidity": {
+        "name": "Relative Humidity"
+      },
+      "operating_mode": {
+        "name": "Operating Mode"
+      },
+      "unit_state": {
+        "name": "Unit State"
+      },
+      "fan_speed": {
+        "name": "Fan Speed"
+      },
+      "supply_fan_virtual_speed": {
+        "name": "Supply Fan Virtual Speed"
+      },
+      "extract_fan_virtual_speed": {
+        "name": "Extract Fan Virtual Speed"
+      },
+      "unit_status": {
+        "name": "Unit Status"
+      },
+      "model": {
+        "name": "Model"
+      },
+      "firmware_rc": {
+        "name": "Firmware RC"
+      },
+      "firmware_fst": {
+        "name": "Firmware FST"
+      },
+      "mode_actual": {
+        "name": "Ventilation Mode Actual",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "boost_duration_minutes": {
+            "name": "Boost duration (minutes)"
+          },
+          "sync_status": {
+            "name": "Confirmation status",
+            "state": {
+              "unavailable": "Unavailable",
+              "not_confirmed": "Not confirmed",
+              "synced": "Confirmed",
+              "send_failed": "Send failed",
+              "pending": "Pending"
+            }
+          },
+          "pending_mode": {
+            "name": "Pending ventilation mode",
+            "state": {
+              "Away": "Away",
+              "Home": "Home",
+              "Boost 30": "Boost 30 min",
+              "Boost 60": "Boost 60 min",
+              "Boost 120": "Boost 120 min",
+              "Boost permanent": "Permanent boost",
+              "Fireplace 10": "Fireplace 10 min (status)"
+            }
+          }
+        },
+        "state": {
+          "Away": "Away",
+          "Home": "Home",
+          "Boost 30": "Boost 30 min",
+          "Boost 60": "Boost 60 min",
+          "Boost 120": "Boost 120 min",
+          "Boost permanent": "Permanent boost",
+          "Fireplace 10": "Fireplace 10 min (status)"
+        }
+      },
+      "clock": {
+        "name": "Clock",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "observed_at": {
+            "name": "Observed at"
+          }
+        }
+      },
+      "weekday": {
+        "name": "Weekday",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "observed_at": {
+            "name": "Observed at"
+          }
+        },
+        "state": {
+          "Monday": "Monday",
+          "Tuesday": "Tuesday",
+          "Wednesday": "Wednesday",
+          "Thursday": "Thursday",
+          "Friday": "Friday",
+          "Saturday": "Saturday",
+          "Sunday": "Sunday"
+        }
+      },
+      "clock_drift": {
+        "name": "Clock Drift",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "observed_at": {
+            "name": "Observed at"
+          }
+        }
+      },
+      "temperature_index_01_unknown": {
+        "name": "Temperature Index 01 (Unknown)",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "telegram_index": {
+            "name": "Telegram index"
+          },
+          "status": {
+            "name": "Identification status",
+            "state": {
+              "Ukjent – ikke identifisert i betjeningspanelet": "Unknown — not identified on the control panel"
+            }
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          }
+        }
+      },
+      "service_co2_threshold_home": {
+        "name": "Service CO2 Home Threshold"
+      },
+      "service_co2_threshold_boost": {
+        "name": "Service CO2 Boost Threshold"
+      },
+      "service_supply_fan_1": {
+        "name": "Service Supply Fan Level 1",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_supply_fan_2": {
+        "name": "Service Supply Fan Level 2",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_supply_fan_3": {
+        "name": "Service Supply Fan Level 3",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_supply_fan_4": {
+        "name": "Service Supply Fan Level 4",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_supply_fan_5": {
+        "name": "Service Supply Fan Level 5",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_extract_fan_1": {
+        "name": "Service Extract Fan Level 1",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_extract_fan_2": {
+        "name": "Service Extract Fan Level 2",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_extract_fan_3": {
+        "name": "Service Extract Fan Level 3",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_extract_fan_4": {
+        "name": "Service Extract Fan Level 4",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_extract_fan_5": {
+        "name": "Service Extract Fan Level 5",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_profile_0": {
+        "name": "Service Fan Profile Away",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_profile_1": {
+        "name": "Service Fan Profile Home",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_profile_2": {
+        "name": "Service Fan Profile Boost",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_profile_3": {
+        "name": "Service Fan Profile Heating",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_profile_4": {
+        "name": "Service Fan Profile Cooling",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "service_profile_5": {
+        "name": "Service Fan Profile Chilling",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "functions_service_interval_months": {
+        "name": "Functions Service Reminder Interval",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "unit_of_measurement": "months"
+      },
+      "functions_summer_night_cooling_temperature_difference": {
+        "name": "Functions Summer Night Cooling Temperature Difference",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "functions_summer_night_cooling_temperature_limit": {
+        "name": "Functions Summer Night Cooling Temperature Limit",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "functions_heating_temperature_limit": {
+        "name": "Functions Heating Temperature Limit",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "functions_heating_p": {
+        "name": "Functions Heating Supply Controller P",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "functions_heating_i": {
+        "name": "Functions Heating Supply Controller I",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "functions_heating_d": {
+        "name": "Functions Heating Supply Controller D",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "functions_filter_monitor_delay": {
+        "name": "Functions Filter Monitor Delay",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "functions_sa_limit_minimum_supply_temperature": {
+        "name": "Functions SA Limit Minimum Supply Temperature",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "functions_sa_limit_setpoint_difference": {
+        "name": "Functions SA Limit Setpoint Difference",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "functions_electric_air_heater_temperature_temperature_setpoint": {
+        "name": "Functions Electric Air Heater Temperature Setpoint",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "summer_cooling_temperature": {
+        "name": "Summer Cooling Temperature",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "byte_width": {
+            "name": "Byte width"
+          },
+          "divisor": {
+            "name": "Divisor"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "supply_air_temperature_setpoint": {
+        "name": "Supply Air Temperature Setpoint",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "telegram_index": {
+            "name": "Telegram index"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        }
+      },
+      "summer_cooling_fan": {
+        "name": "Summer Cooling Fan",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "No Change": "No change",
+          "Away": "Away",
+          "Home": "Home",
+          "Boost": "Boost",
+          "Cooling": "Cooling"
+        }
+      },
+      "functions_heating_control": {
+        "name": "Functions Heating Control",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "Supply": "Supply air",
+          "Extract": "Extract air"
+        }
+      }
+    },
+    "binary_sensor": {
+      "heating": {
+        "name": "Heating Active",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "cooling": {
+        "name": "Cooling Active",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "bypass": {
+        "name": "Heat Exchanger Bypass",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "freeze_protection": {
+        "name": "Freeze Protection",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "preheat": {
+        "name": "Preheating Active",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "chilling": {
+        "name": "Chilling Active",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "preheater_overheat": {
+        "name": "Preheater Overheat",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "reheat": {
+        "name": "Reheating Active",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "fireplace": {
+        "name": "Fireplace Mode Active",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "underpressure_compensation": {
+        "name": "Underpressure Compensation",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "external_boost": {
+        "name": "External Boost",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "humidity_boost": {
+        "name": "Humidity Boost",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "co2_boost": {
+        "name": "CO2 Boost",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "defrosting": {
+        "name": "Defrosting Active",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "defrost_starter": {
+        "name": "Defrost Starter",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "tf_stop": {
+        "name": "Supply Fan Stop",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "external_boost_function": {
+        "name": "External Boost Function",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "external_fireplace_function": {
+        "name": "External Fireplace Function",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "filter_guard_status": {
+        "name": "Filter Guard Status",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "ir_freeze_protection": {
+        "name": "Heat Recovery Freeze Protection",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "emergency_stop": {
+        "name": "Emergency Stop",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "reheating_freezing_alarm": {
+        "name": "Reheater Freezing Alarm",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "reheating_overheat_alarm": {
+        "name": "Reheater Overheat Alarm",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "ir_sensor_failure": {
+        "name": "Heat Recovery Sensor Failure",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "supply_fan_failure": {
+        "name": "Supply Fan Failure",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "extract_fan_failure": {
+        "name": "Extract Fan Failure",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "temperature_deviation_failure": {
+        "name": "Temperature Deviation Failure",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "efficiency_alarm": {
+        "name": "Heat Recovery Efficiency Alarm",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "filter_guard_alarm": {
+        "name": "Filter Guard Alarm",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "service_reminder": {
+        "name": "Service Reminder",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "temperature_failure": {
+        "name": "Temperature Sensor Failure",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "service_co2_control_status": {
+        "name": "Service CO2 Control",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "service_external_control_status": {
+        "name": "Service External Control",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "functions_service_reminder": {
+        "name": "Functions Service Reminder",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "functions_summer_night_cooling": {
+        "name": "Functions Summer Night Cooling",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "functions_heating": {
+        "name": "Functions Heating",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "functions_filter_monitor": {
+        "name": "Functions Filter Monitor",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "functions_fireplace_function": {
+        "name": "Functions Fireplace Function Configuration",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "functions_boost_special": {
+        "name": "Functions Boost Special Configuration",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "functions_electric_air_heater": {
+        "name": "Functions Electric Air Heater",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "service_weekly_schedule": {
+        "name": "Service Weekly Schedule Menu Available",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "byte_offset": {
+            "name": "Byte offset"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "temperature_setting": {
+        "name": "Temperature Menu Available",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "week_schedule_enabled": {
+        "name": "Week Schedule Enabled",
+        "state_attributes": {
+          "source": {
+            "name": "Protocol source"
+          },
+          "read_only": {
+            "name": "Read-only",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "mapping_evidence": {
+            "name": "Mapping evidence",
+            "state": {
+              "existing_code; physical_verification_pending": "Existing mapping; physical verification pending"
+            }
+          }
+        },
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
         "title": "CASA Premium TCP gateway",
-        "description": "Read-only: this integration will not send control or clock commands to the ventilation unit.",
+        "description": "Read-only: no control commands will be sent to the ventilation unit.",
         "data": {
           "host": "Gateway IP address or hostname",
           "port": "TCP port"
+        },
+        "data_description": {
+          "host": "Local address of the RS-485 converter.",
+          "port": "TCP server port on the converter, normally 8899."
         }
       }
     },
@@ -26,6 +1671,10 @@
         "data": {
           "host": "Gateway IP address or hostname",
           "port": "TCP port"
+        },
+        "data_description": {
+          "host": "Local address of the RS-485 converter.",
+          "port": "TCP server port on the converter, normally 8899."
         }
       }
     },

@@ -21,9 +21,9 @@ The Marketplace may load a new GUI integration immediately after first installat
 
 ## Legacy HACS menus
 
-On an older installation that still uses HACS, open **HACS → menu → Custom repositories**, enter the same URL, select **Integration**, and download the intended release. Earlier Core versions have not been tested; the current release metadata sets Core 2026.11.2 as the installation floor. Do not interpret these legacy menu directions as verified support for earlier Core versions.
+On an older installation that still uses HACS, open **HACS → menu → Custom repositories**, enter the same URL, select **Integration**, and download the intended release. The current release requires Core 2026.11.2 or later. These legacy menu directions describe the installation tool only; the minimum Core requirement still applies.
 
-For a prerelease, enable prerelease/beta visibility in the installation tool and select that release explicitly. This project is added from a custom repository link; it is not listed in the default catalogue. A private staging repository cannot yet be installed through this public distribution path.
+For a prerelease, enable prerelease/beta visibility in the installation tool and select that release explicitly. This project is added from a custom repository link; it is not listed in the default catalogue. Use the public repository URL above.
 
 ## Add the connection
 
@@ -54,3 +54,7 @@ Do not delete and recreate the integration just to change the endpoint. Do not c
 Changing a field in Home Assistant does not reconfigure the converter. See [hardware settings](hardware.md) for the 38400/8N1 project profile and local-network prerequisites.
 
 For updates, restore and removal, see [maintenance](troubleshooting.md#update).
+
+## Languages and units
+
+Version **1.1.0** includes English, Bokmål and Nynorsk, plus Celsius/Fahrenheit service-value support. See [languages and units](languages-and-units.md).

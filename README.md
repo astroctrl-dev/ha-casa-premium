@@ -143,7 +143,7 @@ Four diagnostic stages distinguish TCP connectivity, incoming serial bytes, deco
 
 **CASA telegrams** requires successfully decoded recent telegrams; **Fresh sensor data** is green when all ten regularly expected fields were updated within 120 seconds, yellow when only some were updated, and red when none were updated. During startup or when TCP is disconnected, stages may show waiting/not measurable. No ICMP ping or new user configuration is introduced.
 
-If TCP and Serial bytes are green but CASA telegrams are not, check gateway baud rate, data bits, parity, stop bits, RS-485 wiring and protocol compatibility. These time thresholds are preliminary and will be calibrated using observed CASA traffic.
+If TCP and Serial bytes are green but CASA telegrams are not, check gateway baud rate (known working reference: 38,400 baud), data bits, parity, stop bits, RS-485 wiring and protocol compatibility. The baud rate specifies transmission speed, not telegram recurrence interval. These time thresholds are preliminary and will be calibrated using observed CASA traffic.
 
 ### Beta installation
 

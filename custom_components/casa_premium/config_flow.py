@@ -136,6 +136,20 @@ class CasaPremiumOptionsFlow(config_entries.OptionsFlow):
         self._candidate = None
         self._validation_task = None
 
+    def _status_placeholder(self):
+        """Show current receiver stages before editing the endpoint."""
+        hub = self.hass.data.get(DOMAIN)
+        if hub is None or not hasattr(hub, "diagnostic_health"):
+            return "Waiting"
+        states = hub.diagnostic_health()
+        labels = (
+            ("TCP/IP", "tcp"),
+            ("Serial bytes", "raw_bytes"),
+            ("CASA telegrams", "telegram"),
+            ("Fresh sensor data", "sensors"),
+        )
+        return " · ".join(f"{label}: {states.get(key, 'waiting')}" for label, key in labels)
+
     async def async_step_init(self, user_input=None):
         current = {**self._entry.data, **self._entry.options}
         if user_input is None:
@@ -144,12 +158,14 @@ class CasaPremiumOptionsFlow(config_entries.OptionsFlow):
                 data_schema=_endpoint_schema(
                     current.get(CONF_HOST, ""), current.get(CONF_PORT, 8899)
                 ),
+                description_placeholders={"connection_status": self._status_placeholder()},
             )
         host, port = user_input[CONF_HOST], user_input[CONF_PORT]
         if not _valid_host(host):
             return self.async_show_form(
                 step_id="init",
                 data_schema=_endpoint_schema(host, port),
+                description_placeholders={"connection_status": self._status_placeholder()},
                 errors={"base": "invalid_host"},
             )
         if (host, port) == (current[CONF_HOST], current[CONF_PORT]):
@@ -186,5 +202,6 @@ class CasaPremiumOptionsFlow(config_entries.OptionsFlow):
             data_schema=_endpoint_schema(
                 self._candidate[CONF_HOST], self._candidate[CONF_PORT]
             ),
+            description_placeholders={"connection_status": self._status_placeholder()},
             errors={"base": "cannot_connect"},
         )

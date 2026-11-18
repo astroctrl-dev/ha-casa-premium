@@ -1804,6 +1804,10 @@
           "host": "Lokal adresse til RS-485-konverteren.",
           "port": "TCP-serverport på konverteren, normalt 8899."
         }
+      },
+      "save_anyway": {
+        "title": "Tilkoblingen kunne ikke bekreftes",
+        "description": "CASA-kommunikasjon kunne ikke bekreftes for {host}:{port}.\\n\\n{connection_status}\\n\\nDu kan likevel lagre IP-adresse og port og sjekke diagnostikk på integrasjonssiden. Dette erstatter den tidligere forbindelsen. Lukk dialogen for å avbryte."
       }
     },
     "error": {

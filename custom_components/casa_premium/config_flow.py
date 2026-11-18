@@ -136,19 +136,32 @@ class CasaPremiumOptionsFlow(config_entries.OptionsFlow):
         self._candidate = None
         self._validation_task = None
 
-    def _status_placeholder(self):
-        """Show current receiver stages before editing the endpoint."""
-        hub = self.hass.data.get(DOMAIN)
-        if hub is None or not hasattr(hub, "diagnostic_health"):
-            return "Waiting"
-        states = hub.diagnostic_health()
+    def _status_placeholder(self, *, candidate_failed=False):
+        """Describe active receiver separately from a failed candidate."""
         labels = (
             ("TCP/IP", "tcp"),
             ("Serial bytes", "raw_bytes"),
             ("CASA telegrams", "telegram"),
             ("Fresh sensor data", "sensors"),
         )
-        return " · ".join(f"{label}: {states.get(key, 'waiting')}" for label, key in labels)
+        icons = {"ok": "🟢", "degraded": "🟡", "error": "🔴",
+                 "waiting": "⚪", "not_measurable": "⚪"}
+        if candidate_failed:
+            # A failed candidate has no validated protocol or fresh sensor data.
+            # Do not accidentally present the old receiver's OK states as its own.
+            return " · ".join(
+                f"⚪ {label}: not confirmed" if key == "tcp"
+                else f"⚪ {label}: not confirmed"
+                for label, key in labels
+            )
+        hub = self.hass.data.get(DOMAIN)
+        if hub is None or not hasattr(hub, "diagnostic_health"):
+            return " · ".join(f"⚪ {label}: waiting" for label, _ in labels)
+        states = hub.diagnostic_health()
+        return " · ".join(
+            f"{icons.get(states.get(key), '⚪')} {label}: {states.get(key, 'waiting')}"
+            for label, key in labels
+        )
 
     async def async_step_init(self, user_input=None):
         current = {**self._entry.data, **self._entry.options}
@@ -202,6 +215,6 @@ class CasaPremiumOptionsFlow(config_entries.OptionsFlow):
             data_schema=_endpoint_schema(
                 self._candidate[CONF_HOST], self._candidate[CONF_PORT]
             ),
-            description_placeholders={"connection_status": self._status_placeholder()},
+            description_placeholders={"connection_status": self._status_placeholder(candidate_failed=True)},
             errors={"base": "cannot_connect"},
         )

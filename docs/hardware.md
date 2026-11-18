@@ -57,4 +57,4 @@ Home Assistant must be able to connect to that local TCP port. The converter mus
 
 The gateway connection does not use application-layer authentication or TLS. Keep it on a trusted local network. **Do not expose the gateway to the internet or configure router port forwarding for it.**
 
-Continue with [HACS installation and GUI setup](installation.md).
+Continue with [Marketplace/HACS installation and GUI setup](installation.md).

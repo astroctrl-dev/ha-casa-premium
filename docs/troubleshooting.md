@@ -22,7 +22,7 @@ This is expected. The integration is read-only. The historical clock action is a
 
 1. Create a full Home Assistant backup and keep the complete previous integration directory/version.
 2. Read the release notes. Updates to this read-only release do not restore legacy writable controls.
-3. Select the intended release in HACS and download it.
+3. Select the intended release in Marketplace (or legacy HACS) and download it.
 4. Save changes, validate Home Assistant's configuration and perform a full Core restart.
 5. Check that the integration loads and your expected sensor values return.
 
@@ -30,12 +30,12 @@ This is expected. The integration is read-only. The historical clock action is a
 
 If validation fails, do not restart into an invalid configuration. Restore the complete previous integration directory, removing files that belong only to the failed version, or restore the full backup. If configuration/registry data changed, use the corresponding full backup. Validate configuration, restart Core fully and check operation.
 
-HACS can redownload a previous release only if that release exists; retain your own backup before first installation. Do not manually edit Home Assistant's `.storage` files.
+Marketplace/HACS can redownload a previous release only if that release exists; retain your own backup before first installation. Do not manually edit Home Assistant's `.storage` files.
 
 ## Uninstall
 
 1. Remove the integration entry under **Settings → Devices & services**.
-2. Remove the downloaded integration through HACS.
+2. Remove the downloaded integration through Marketplace (or legacy HACS).
 3. Remove any legacy YAML definition and save the change.
 4. Validate configuration and restart Core fully.
 5. Review automations and dashboards that referenced the removed sensors.
@@ -44,6 +44,6 @@ The manufacturer's original ventilation controls are not removed or replaced by 
 
 ## Report a problem
 
-Include your Core/HACS versions, integration version, unit/controller model, relevant firmware and steps to reproduce it. Review and redact log excerpts before sharing. Never post credentials, tokens, private keys, private network addresses or full configuration exports.
+Include your Core version and Marketplace/HACS version where applicable, integration version, unit/controller model, relevant firmware and steps to reproduce it. Review and redact log excerpts before sharing. Never post credentials, tokens, private keys, private network addresses or full configuration exports.
 
 Optional protocol logging writes local files when the existing `input_boolean.casa_ventilasjon_logging` helper is on. Those files can contain detailed device traffic. Do not upload them without reviewing their contents.

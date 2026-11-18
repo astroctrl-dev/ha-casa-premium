@@ -137,7 +137,7 @@ class CasaPremiumOptionsFlow(config_entries.OptionsFlow):
         self._validation_task = None
 
     def _status_placeholder(self, *, candidate_failed=False):
-        """Describe active receiver separately from a failed candidate."""
+        """Show four readable diagnostic rows, never stale OK for a failed IP."""
         labels = (
             ("TCP/IP", "tcp"),
             ("Serial bytes", "raw_bytes"),
@@ -147,18 +147,18 @@ class CasaPremiumOptionsFlow(config_entries.OptionsFlow):
         icons = {"ok": "🟢", "degraded": "🟡", "error": "🔴",
                  "waiting": "⚪", "not_measurable": "⚪"}
         if candidate_failed:
-            # A failed candidate has no validated protocol or fresh sensor data.
-            # Do not accidentally present the old receiver's OK states as its own.
-            return " · ".join(
-                f"⚪ {label}: not confirmed" if key == "tcp"
-                else f"⚪ {label}: not confirmed"
-                for label, key in labels
+            # A candidate may fail after TCP succeeds. Do not invent which
+            # individual stage failed without collecting candidate telemetry.
+            return "\\n\\n".join(
+                f"⚪ {label}: not confirmed" for label, _ in labels
             )
         hub = self.hass.data.get(DOMAIN)
         if hub is None or not hasattr(hub, "diagnostic_health"):
-            return " · ".join(f"⚪ {label}: waiting" for label, _ in labels)
+            return "\\n\\n".join(
+                f"⚪ {label}: waiting" for label, _ in labels
+            )
         states = hub.diagnostic_health()
-        return " · ".join(
+        return "\\n\\n".join(
             f"{icons.get(states.get(key), '⚪')} {label}: {states.get(key, 'waiting')}"
             for label, key in labels
         )

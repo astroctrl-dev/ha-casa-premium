@@ -56,6 +56,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                        [CasaServiceNumberSensor(hub, description) for description in SERVICE_NUMBERS] +
                        [CasaSupplySetpointSensor(hub)] +
                        [CasaServiceChoiceSensor(hub, description) for description in SERVICE_CHOICES] +
+                       [CasaConnectionStatusSensor(hub)] +
                        [CasaDiagnosticStatusSensor(hub, key) for key in ('tcp', 'raw_bytes', 'telegram', 'sensors')])
 
 
@@ -450,6 +451,50 @@ class CasaDiagnosticStatusSensor(CasaEntity, SensorEntity):
                    for key in keys if (value := info[key]) is not None}
         details["reason"] = info["reasons"][self.key]
         return details
+
+    async def async_added_to_hass(self):
+        self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
+
+class CasaConnectionStatusSensor(CasaEntity, SensorEntity):
+    """One summary entity for the CASA device's connection status.
+
+    The four stage sensors remain available for troubleshooting. The native
+    Home Assistant device page controls entity ordering and grouping.
+    """
+    _attr_should_poll = False
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ("connected", "degraded", "disconnected", "waiting")
+    _attr_icon = "mdi:lan-connect"
+
+    def __init__(self, hub):
+        self.hub = hub
+        self._attr_unique_id = f"casa_premium_{hub.host}_connection_status"
+        configure_translation(self, hub)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, hub.host)}, name="Swegon CASA Premium",
+            manufacturer="Swegon",
+        )
+
+    @property
+    def available(self):
+        return True
+
+    @property
+    def native_value(self):
+        health = self.hub.diagnostic_health()
+        stages = tuple(health[key] for key in ("tcp", "raw_bytes", "telegram", "sensors"))
+        if all(state == "ok" for state in stages):
+            return "connected"
+        if stages[0] == "error":
+            return "disconnected"
+        if any(state in ("error", "degraded") for state in stages):
+            return "degraded"
+        return "waiting"
+
+    @property
+    def extra_state_attributes(self):
+        health = self.hub.diagnostic_health()
+        return {key: health[key] for key in ("tcp", "raw_bytes", "telegram", "sensors")}
 
     async def async_added_to_hass(self):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))

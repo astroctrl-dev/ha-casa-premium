@@ -210,11 +210,20 @@ class CasaPremiumOptionsFlow(config_entries.OptionsFlow):
             confirmed = False
         if confirmed:
             return self.async_create_entry(title="", data=self._candidate)
+        return await self.async_step_save_anyway()
+
+    async def async_step_save_anyway(self, user_input=None):
+        """Only explicit confirmation saves a failed candidate endpoint."""
+        if self._candidate is None:
+            return self.async_abort(reason="unknown")
+        if user_input is not None:
+            return self.async_create_entry(title="", data=self._candidate)
         return self.async_show_form(
-            step_id="init",
-            data_schema=_endpoint_schema(
-                self._candidate[CONF_HOST], self._candidate[CONF_PORT]
-            ),
-            description_placeholders={"connection_status": self._status_placeholder(candidate_failed=True)},
-            errors={"base": "cannot_connect"},
+            step_id="save_anyway",
+            data_schema=vol.Schema({}),
+            description_placeholders={
+                "host": self._candidate[CONF_HOST],
+                "port": str(self._candidate[CONF_PORT]),
+                "connection_status": self._status_placeholder(candidate_failed=True),
+            },
         )

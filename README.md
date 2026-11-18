@@ -137,7 +137,7 @@ English, Norwegian Bokmål and Norwegian Nynorsk are included. Entity names use 
 Temperature values follow Home Assistant's Celsius/Fahrenheit setting; an explicit unit choice on an individual sensor takes priority. See [languages and units](docs/languages-and-units.md) for details and automation considerations.
 
 
-## Beta 1.2.0b9 – connection diagnostics
+## Beta 1.2.0b10 – connection diagnostics
 
 Four diagnostic stages distinguish TCP connectivity, incoming serial bytes, decoded CASA telegrams and fresh sensor readings. The **Serial bytes** indicator is blue (ok) when bytes arrived within the last 5 seconds, and red (error) when no bytes arrived for 5 seconds or more; there is no yellow intermediate state. It measures bytes received from the gateway over TCP, **not** whether RS-485 framing or CASA protocol settings are correct. The diagnostic state refreshes once per second.
 
@@ -147,4 +147,4 @@ If TCP and Serial bytes are green but CASA telegrams are not, check gateway baud
 
 ### Beta installation
 
-Use the public HACS repository `https://github.com/astroctrl-dev/ha-casa-premium` and select the published prerelease `v1.2.0b9` when available. Back up your HA configuration, install the selected beta, restart Home Assistant, and verify the four diagnostic states. To roll back, reinstall the previously working release and restart HA. The release must be explicitly published before HACS can install this beta.
+Use the public HACS repository `https://github.com/astroctrl-dev/ha-casa-premium` and select the published prerelease `v1.2.0b10` when available. Back up your HA configuration, install the selected beta, restart Home Assistant, and verify the four diagnostic states. To roll back, reinstall the previously working release and restart HA. The release must be explicitly published before HACS can install this beta.

@@ -1804,6 +1804,10 @@
           "host": "Local address of the RS-485 converter.",
           "port": "TCP server port on the converter, normally 8899."
         }
+      },
+      "save_anyway": {
+        "title": "Connection validation failed",
+        "description": "CASA communication could not be confirmed for {host}:{port}.\\n\\n{connection_status}\\n\\nYou can save the IP address and port anyway and check diagnostics on the integration page. This replaces the previous connection. Close this dialog to cancel."
       }
     },
     "error": {

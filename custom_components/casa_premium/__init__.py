@@ -300,7 +300,7 @@ class CasaHub:
     async def refresh_diagnostics(self):
         """Refresh age-based states even when no bytes arrive."""
         while True:
-            await asyncio.sleep(15)
+            await asyncio.sleep(1)
             self.notify()
 
     def logging_enabled(self):

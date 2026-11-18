@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0b1 — pre-release
+## 1.2.0b2 — pre-release
 
 - Added automatic read-only communication diagnostics on the CASA device: TCP, incoming bytes, decoded telegrams and fresh sensor coverage.
 - Added timestamps, data age, reasons and colored status symbols with text in English, Bokmål and Nynorsk.

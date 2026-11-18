@@ -1786,6 +1786,9 @@
     "error": {
       "invalid_host": "Ugyldig IP-adresse eller vertsnavn.",
       "cannot_connect": "Kan ikke koble til gatewayen. Forrige konfigurasjon beholdes."
+    },
+    "progress": {
+      "validate_connection": "Venter på CASA-tilkobling (15–60 sekunder). Avbryt for å beholde lagrede innstillinger."
     }
   }
 }

@@ -1786,6 +1786,9 @@
     "error": {
       "invalid_host": "Invalid IP address or hostname.",
       "cannot_connect": "Cannot connect to gateway. Previous settings are preserved."
+    },
+    "progress": {
+      "validate_connection": "Pending CASA connection (15–60 seconds). Cancel to retain saved settings."
     }
   }
 }

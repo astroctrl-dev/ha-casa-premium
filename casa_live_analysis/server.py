@@ -140,7 +140,15 @@ async def diagnostics(request):
 
 
 async def analysis_report(request):
-    return web.json_response(analyze(list(state.events), baseline=baseline, connected=state.connected))
+    report = analyze(list(state.events), baseline=baseline, connected=state.connected)
+    # The integration is authoritative whenever it exposes the shared quality API.
+    shared = state.health.get('quality') if isinstance(state.health, dict) else None
+    if isinstance(shared, dict):
+        report['quality'] = shared
+        report['quality_source'] = 'integration'
+    else:
+        report['quality_source'] = 'legacy_local_fallback'
+    return web.json_response(report)
 
 
 async def baseline_status(request):

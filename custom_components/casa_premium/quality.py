@@ -7,8 +7,7 @@ from statistics import median
 from time import monotonic
 
 DEFAULT_BASELINE = {"tcp_median_ms": 150.0, "sensor_intervals_ms": {}}
-EXPECTED_SENSORS = ("outdoor_temp", "supply_temp", "extract_temp", "exhaust_temp",
-                    "supply_fan_rpm", "extract_fan_rpm")
+EXPECTED_SENSORS = ("outdoor_temp", "supply_temp", "extract_temp", "exhaust_temp")
 MIN_CRC_SAMPLES = 1000
 
 

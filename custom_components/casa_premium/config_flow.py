@@ -159,7 +159,7 @@ class CasaPremiumOptionsFlow(config_entries.OptionsFlow):
             )
         states = hub.diagnostic_health()
         return "\\n\\n".join(
-            f"{('🔵' if key == 'raw_bytes' and states.get(key) == 'ok' else icons.get(states.get(key), '⚪'))} {label}: {states.get(key, 'waiting')}"
+            f"{icons.get(states.get(key), '⚪')} {label}: {states.get(key, 'waiting')}"
             for label, key in labels
         )
 

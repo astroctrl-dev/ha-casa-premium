@@ -35,6 +35,7 @@ th,td{text-align:left;border-bottom:1px solid #354554;padding:7px;overflow-wrap:
 <div class="metric">CRC-feil <strong id="crc">–</strong></div>
 <div class="metric">Hendelser <strong id="events">0</strong></div>
 </div><p class="muted" id="progress">Opptak ikke startet</p></section>
+<section class="panel"><h2>Automatisk kommunikasjonsanalyse</h2><button id="analyze">Analyser nå</button><p class="muted">Gjelder data som fortsatt finnes i appens buffer (maks 12 000 hendelser).</p><div id="analysis" style="white-space:pre-wrap"></div></section>
 <section class="panel"><h2>Hendelser (nyeste først)</h2>
 <div class="scroller"><table><thead><tr><th>Tid (UTC)</th><th>Type</th><th>Detaljer</th></tr></thead><tbody id="rows"></tbody></table></div></section>
 <p class="muted">Tidspunktene er HA-mottakstid, ikke fysisk RS-485-bittiming. Rå telegrambytes inngår ikke i denne betaversjonens API.</p>
@@ -98,5 +99,16 @@ setInterval(()=>{
   if(left===0){recording=false;buttons()}
  }else $('progress').textContent=recorded.length?'Opptak stoppet: '+recorded.length+' hendelser klare for CSV':'Opptak ikke startet';
 },1000);
+$('analyze').onclick=async()=>{
+ const box=$('analysis');box.textContent='Analyserer …';
+ try{
+  const res=await fetch('api/analysis',{cache:'no-store'});
+  if(!res.ok)throw Error('HTTP '+res.status);
+  const a=await res.json();
+  const duration=a.duration_seconds===null?'ukjent':a.duration_seconds+' s';
+  const top=Object.entries(a.telegram_commands||{}).sort((x,y)=>y[1]-x[1]).slice(0,6).map(x=>x[0]+': '+x[1]).join(', ');
+  box.textContent='Datavindu: '+duration+' · '+a.events+' hendelser\\nTCP: '+a.tcp_bytes+' byte · median '+(a.tcp_interval_median_ms??'–')+' ms · maks '+(a.tcp_interval_max_ms??'–')+' ms\\nPauser over 0,5 s: '+a.gaps_over_threshold+' · CRC-feil: '+a.crc_errors+'\\nTelegrammer: '+top+'\\nStørste pauser: '+(a.largest_gaps||[]).slice(0,5).map(g=>g.seconds+' s ('+g.utc+')').join('; ')+'\\n\\nBegrensninger: '+(a.limits||[]).join(' ');
+ }catch(e){box.textContent='Analysefeil: '+e.message}
+};
 buttons();$('connect').click();
 </script></body></html>

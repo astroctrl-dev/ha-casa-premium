@@ -2,6 +2,17 @@
 
 Feature #14: read-only diagnostics, live view, 15-minute recording, CSV.
 
+## Compatibility with CASA Premium
+
+CASA Live Analysis requires the diagnostic WebSocket API in the **Swegon CASA Premium** Home Assistant integration. Install a compatible integration release first.
+
+| CASA Live Analysis app | Required CASA Premium integration |
+| --- | --- |
+| 0.1.1 | 1.3.0b1 or later compatible beta |
+| 0.2.0 | 1.3.0b1 or later compatible beta |
+
+**CASA Premium 1.2.0 and earlier do not provide the required diagnostics API.** The analysis app is optional and is not required for normal integration operation. Compatibility is defined by the availability of the `casa_premium/diagnostics` API, not by version numbering alone.
+
 ## Install from HA app repository
 
 1. Home Assistant **Settings → Apps → App store → ⋮ → Repositories**.

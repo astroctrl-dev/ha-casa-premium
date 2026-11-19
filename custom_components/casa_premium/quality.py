@@ -5,8 +5,6 @@ No device writes. All times are HA monotonic receive observations, not RS-485 wi
 from collections import deque, defaultdict
 from statistics import median
 from time import monotonic
-import json
-from pathlib import Path
 
 DEFAULT_BASELINE = {"tcp_median_ms": 150.0, "sensor_intervals_ms": {}}
 EXPECTED_SENSORS = ("outdoor_temp", "supply_temp", "extract_temp", "exhaust_temp",
@@ -24,6 +22,9 @@ class QualityMonitor:
         self.sensor_updates = defaultdict(lambda: deque(maxlen=100))
         self.last_seen = {}
         self.reconnects = deque(maxlen=100)
+        self.connection_epochs = deque(maxlen=100)
+        self.epoch = 0
+        self.receive_epochs = deque(maxlen=5000)
         self.calibration_started = None
         self.calibration_receives = []
         self.calibration_sensors = defaultdict(list)
@@ -33,13 +34,16 @@ class QualityMonitor:
     def connection(self, connected):
         now = monotonic()
         if connected and not self.connected:
+            self.epoch += 1
             self.reconnects.append(now)
+            self.connection_epochs.append(self.epoch)
         self.connected = connected
 
     def receive(self, byte_count, valid_frames, crc_errors, sensor_keys=()):
         now = monotonic()
         if byte_count:
             self.receives.append(now)
+            self.receive_epochs.append(self.epoch)
             if self.calibration_started is not None:
                 self.calibration_receives.append(now)
         self.valid_frames += valid_frames
@@ -94,7 +98,9 @@ class QualityMonitor:
         crc_state = ("unknown" if total < MIN_CRC_SAMPLES else
                      "ok" if percent < 0.1 else
                      "warning" if percent <= 1 else "error")
-        intervals = [b-a for a, b in zip(self.receives, list(self.receives)[1:])]
+        observations = list(zip(self.receives, self.receive_epochs))
+        intervals = [b[0]-a[0] for a,b in zip(observations, observations[1:])
+                     if a[1] == b[1]]
         tcp_ref = max(0.001, float(self.baseline.get("tcp_median_ms", 150)) / 1000)
         gaps = [g for g in intervals if g > max(0.5, 5*tcp_ref)]
         # Only confirmed connection transitions may be excluded from gap alarms.

@@ -455,7 +455,7 @@ class CasaDiagnosticStatusSensor(CasaEntity, SensorEntity):
             # readable colored indicator without changing the enum state.
             state = info["raw_bytes"]
             details["status_indicator"] = (
-                "🔵" if state == "ok" else
+                "🟢" if state == "ok" else
                 "🔴" if state == "error" else "⚪"
             )
             details["status_label"] = (

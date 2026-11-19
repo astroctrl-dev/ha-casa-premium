@@ -1,0 +1,20 @@
+name: CASA beta CI
+on:
+  push:
+    branches: [feature/14-diagnostic-api]
+  pull_request:
+    branches: [release/1.2.0]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile CASA Python modules
+        run: python -m compileall -q custom_components/casa_premium
+      - name: Run diagnostics unit tests
+        run: |
+          python -m pip install pytest
+          python -m pytest -q tests/test_diagnostic_events.py

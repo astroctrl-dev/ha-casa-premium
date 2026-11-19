@@ -12,6 +12,8 @@ from homeassistant.helpers import config_validation as cv, discovery
 from .decoder import FrameParser, decode, decode_actual_mode, crc16
 from .protocol_logger import ProtocolLogger
 from .diagnostics import health
+from .diagnostic_events import DiagnosticEvents
+from homeassistant.components import websocket_api
 
 DOMAIN = 'casa_premium'
 LOGGING_ENTITY = 'input_boolean.casa_ventilasjon_logging'
@@ -228,6 +230,7 @@ class CasaHub:
         self.diagnostic_last_error = None
         self.diagnostic_sensor_seen = {}
         self.diagnostic_task = None
+        self.diagnostic_events = DiagnosticEvents()
         self.writer = None
         self.send_lock = asyncio.Lock()
         self.selected_mode = None
@@ -1175,14 +1178,20 @@ class CasaHub:
                             _LOGGER.warning('CASA TCP stream closed; reconnecting')
                             break
                         received_at = datetime.now(timezone.utc)
+                        self.diagnostic_events.record('tcp_receive', bytes=len(chunk))
+                        crc_before = self.parser.crc_errors
                         self.diagnostic_received_bytes += len(chunk)
                         self.diagnostic_last_byte_at = received_at
                         frames = list(self.parser.feed(chunk))
+                        crc_delta = self.parser.crc_errors - crc_before
+                        if crc_delta:
+                            self.diagnostic_events.record('crc_error', count=crc_delta)
                         if frames:
                             self.diagnostic_valid_frames += len(frames)
                             self.diagnostic_last_frame_at = received_at
                         changed = False
                         for frame in frames:
+                            self.diagnostic_events.record('telegram', command=f'0x{frame[6]:02X}', bytes=len(frame))
                             decoded = decode(frame)
                             if decoded:
                                 self.diagnostic_decoded_frames += 1
@@ -1190,6 +1199,7 @@ class CasaHub:
                                 self.diagnostic_sensor_seen.update(
                                     {key: received_at for key in decoded}
                                 )
+                                self.diagnostic_events.record('sensor_observation', command=f'0x{frame[6]:02X}', keys=list(decoded))
                                 self.values.update(decoded)
                                 changed = True
                             self._process_service_frame(frame)
@@ -1299,8 +1309,32 @@ async def _async_start_hub(hass, host, port, config, entry=None):
     return True
 
 
+@websocket_api.websocket_command({
+    vol.Required("type"): "casa_premium/diagnostics",
+    vol.Optional("after", default=0): vol.All(vol.Coerce(int), vol.Range(min=0)),
+})
+@websocket_api.async_response
+async def async_casa_diagnostics(hass, connection, msg):
+    """Authenticated HA websocket snapshot; never writes to CASA."""
+    hub = hass.data.get(DOMAIN)
+    if hub is None:
+        connection.send_error(msg["id"], "not_loaded", "CASA Premium is not loaded")
+        return
+    connection.send_result(msg["id"], {
+        "connected": hub.connected,
+        "health": {
+            "received_bytes": hub.diagnostic_received_bytes,
+            "valid_frames": hub.diagnostic_valid_frames,
+            "decoded_frames": hub.diagnostic_decoded_frames,
+            "crc_errors": hub.parser.crc_errors,
+        },
+        **hub.diagnostic_events.snapshot(msg["after"]),
+    })
+
+
 async def async_setup(hass, config):
     """Initialize installations with legacy YAML configuration."""
+    websocket_api.async_register_command(hass, async_casa_diagnostics)
     if DOMAIN not in config:
         return True
     opts = config[DOMAIN]

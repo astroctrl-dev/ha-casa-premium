@@ -1,0 +1,144 @@
+"""CASA Live Analysis add-on: ingress-only read-only diagnostic bridge."""
+import asyncio
+import json
+import logging
+import os
+from collections import deque
+from datetime import datetime, timezone
+from pathlib import Path
+
+from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
+
+logging.basicConfig(level=logging.INFO)
+LOG = logging.getLogger("casa-live")
+TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
+# Prefer the documented Supervisor proxy; use internal Core DNS as fallback.
+UPSTREAMS = (
+    "ws://supervisor/core/api/websocket",
+    "ws://homeassistant:8123/api/websocket",
+    "ws://homeassistant:80/api/websocket",
+)
+MAX_EVENTS = 12000
+
+
+class State:
+    def __init__(self):
+        self.events = deque(maxlen=MAX_EVENTS)
+        self.last_seq = 0
+        self.health = {}
+        self.connected = False
+        self.api_connected = False
+        self.error = "Connecting to Home Assistant diagnostics API"
+        self.last_poll_utc = None
+
+    def snapshot(self, after=0):
+        oldest = self.events[0]["seq"] if self.events else self.last_seq + 1
+        return {
+            "api_connected": self.api_connected,
+            "connected": self.connected,
+            "error": self.error,
+            "health": self.health,
+            "last_poll_utc": self.last_poll_utc,
+            "latest_seq": self.last_seq,
+            "lost": max(0, oldest - after - 1) if after else 0,
+            "events": [e for e in self.events if e["seq"] > after],
+        }
+
+
+state = State()
+
+
+async def consume_ws(session, url):
+    LOG.info("Connecting to HA websocket: %s", url)
+    async with session.ws_connect(url, heartbeat=30, timeout=15) as ws:
+        hello = await ws.receive_json(timeout=15)
+        if hello.get("type") != "auth_required":
+            raise RuntimeError("Expected auth_required, got " + str(hello.get("type")))
+        await ws.send_json({"type": "auth", "access_token": TOKEN})
+        auth = await ws.receive_json(timeout=15)
+        if auth.get("type") != "auth_ok":
+            raise RuntimeError("HA authentication failed: " + str(auth.get("type")))
+        state.api_connected = True
+        state.error = None
+        request_id = 0
+        while True:
+            request_id += 1
+            await ws.send_json({
+                "id": request_id,
+                "type": "casa_premium/diagnostics",
+                "after": state.last_seq,
+            })
+            reply = await ws.receive_json(timeout=15)
+            if reply.get("type") != "result" or reply.get("id") != request_id:
+                raise RuntimeError("Unexpected diagnostics API response")
+            if not reply.get("success"):
+                raise RuntimeError("CASA API: " + json.dumps(reply.get("error", {})))
+            result = reply.get("result", {})
+            state.connected = bool(result.get("connected"))
+            state.health = result.get("health", {})
+            state.last_poll_utc = datetime.now(timezone.utc).isoformat()
+            if result.get("lost"):
+                state.error = f"HA event buffer lost {result['lost']} events"
+            else:
+                state.error = None
+            for event in result.get("events", []):
+                seq = event.get("seq")
+                if not isinstance(seq, int) or seq <= state.last_seq:
+                    continue
+                state.events.append(event)
+                state.last_seq = seq
+            await asyncio.sleep(1)
+
+
+async def poll_forever(app):
+    if not TOKEN:
+        state.error = "SUPERVISOR_TOKEN unavailable: enable homeassistant_api"
+        LOG.error(state.error)
+        return
+    timeout = ClientTimeout(total=None, sock_connect=15)
+    async with ClientSession(timeout=timeout) as session:
+        while True:
+            for url in UPSTREAMS:
+                try:
+                    await consume_ws(session, url)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    state.api_connected = False
+                    state.connected = False
+                    state.error = str(exc)
+                    LOG.warning("%s: %s", url, exc)
+            await asyncio.sleep(5)
+
+
+async def index(request):
+    return web.FileResponse(Path(__file__).with_name("index.html"))
+
+
+async def diagnostics(request):
+    try:
+        after = int(request.query.get("after", "0"))
+        if after < 0:
+            raise ValueError
+    except ValueError:
+        raise web.HTTPBadRequest(text="after must be nonnegative integer")
+    return web.json_response(state.snapshot(after))
+
+
+async def on_start(app):
+    app["poll_task"] = asyncio.create_task(poll_forever(app))
+
+
+async def on_cleanup(app):
+    task = app["poll_task"]
+    task.cancel()
+    await asyncio.gather(task, return_exceptions=True)
+
+
+app = web.Application(client_max_size=1024 * 1024)
+app.router.add_get("/", index)
+app.router.add_get("/api/diagnostics", diagnostics)
+app.on_startup.append(on_start)
+app.on_cleanup.append(on_cleanup)
+if __name__ == "__main__":
+    web.run_app(app, host="0.0.0.0", port=8099, access_log=None)

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CASA Premium – Live analyse</title>
+<style>
+:root{color-scheme:dark;font:15px system-ui,sans-serif;background:#101923;color:#edf4fa}
+body{margin:auto;padding:16px;max-width:1000px}h1{font-size:1.4rem}h2{font-size:1.05rem}
+header,.toolbar,.metrics{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.panel{background:#1d2b38;border:1px solid #354554;border-radius:12px;padding:14px;margin:12px 0}
+input,button{font:inherit;border-radius:7px;padding:10px;border:1px solid #607083}
+input{background:#101923;color:white;min-width:0}#token{width:min(96%,470px)}
+button{background:#2178b6;color:white;cursor:pointer}button:disabled{opacity:.45;cursor:default}
+.metric{flex:1 1 115px;background:#14212c;border-radius:8px;padding:10px}
+.metric strong{display:block;font-size:1.45rem}.muted{color:#a6b8c8}
+#status{font-weight:700}table{border-collapse:collapse;width:100%;font-size:.82rem}
+th,td{text-align:left;border-bottom:1px solid #354554;padding:7px;overflow-wrap:anywhere}
+.scroller{max-height:360px;overflow:auto}#error{color:#ffb6a6;white-space:pre-wrap}
+</style></head><body>
+<h1>CASA Premium · Live analyse</h1>
+<p class="muted">Feature #14 · Kun lesing · Bruker eksisterende CASA TCP-forbindelse</p>
+<section class="panel">
+<div class="toolbar"><span id="status">Frakoblet</span><span id="clock" class="muted"></span></div>
+<p class="muted">Autentisering håndteres av Home Assistant Ingress. Ingen token nødvendig.</p>
+
+<div class="toolbar" style="margin-top:10px">
+<button id="connect">Start livevisning</button><button id="disconnect" disabled>Stopp livevisning</button>
+<button id="record" disabled>Start 15 min opptak</button><button id="stop" disabled>Stopp opptak</button>
+<button id="csv" disabled>Eksporter CSV</button>
+</div><p id="error"></p>
+</section>
+<section class="panel"><h2>Live status</h2><div class="metrics">
+<div class="metric">TCP <strong id="tcp">–</strong></div>
+<div class="metric">Mottatte byte <strong id="bytes">–</strong></div>
+<div class="metric">CASA-telegrammer <strong id="frames">–</strong></div>
+<div class="metric">Dekodet <strong id="decoded">–</strong></div>
+<div class="metric">CRC-feil <strong id="crc">–</strong></div>
+<div class="metric">Hendelser <strong id="events">0</strong></div>
+</div><p class="muted" id="progress">Opptak ikke startet</p></section>
+<section class="panel"><h2>Hendelser (nyeste først)</h2>
+<div class="scroller"><table><thead><tr><th>Tid (UTC)</th><th>Type</th><th>Detaljer</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<p class="muted">Tidspunktene er HA-mottakstid, ikke fysisk RS-485-bittiming. Rå telegrambytes inngår ikke i denne betaversjonens API.</p>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+let timer=null,seq=0,recording=false,deadline=0,recorded=[];
+const rows=[];
+function buttons(){ $('connect').disabled=!!timer;$('disconnect').disabled=!timer;$('record').disabled=!timer||recording;$('stop').disabled=!recording;$('csv').disabled=!recorded.length }
+function appendEvents(data){
+ if(data.lost)$('error').textContent='Advarsel: '+data.lost+' hendelser mangler i buffer';
+ for(const e of data.events||[]){
+  if(typeof e.seq==='number')seq=Math.max(seq,e.seq);
+  rows.unshift(e);if(rows.length>250)rows.pop();
+  if(recording)recorded.push(e);
+ }
+ $('events').textContent=String(rows.length);
+ const body=$('rows');body.replaceChildren();
+ for(const e of rows.slice(0,100)){
+  const tr=document.createElement('tr');
+  for(const v of [e.utc??'',e.kind??'',JSON.stringify(e)]){
+   const td=document.createElement('td');td.textContent=v;tr.append(td)
+  }
+  body.append(tr);
+ }
+}
+async function poll(){
+ try{
+  const response=await fetch('api/diagnostics?after='+seq,{cache:'no-store'});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  const data=await response.json(),h=data.health||{};
+  $('status').textContent=data.api_connected?'Diagnostikk-API tilkoblet':'Venter på diagnostikk-API';
+  $('error').textContent=data.error||'';
+  $('tcp').textContent=data.connected?'Tilkoblet':'Frakoblet';
+  $('bytes').textContent=h.received_bytes??'–';
+  $('frames').textContent=h.valid_frames??'–';
+  $('decoded').textContent=h.decoded_frames??'–';
+  $('crc').textContent=h.crc_errors??'–';
+  appendEvents(data);
+ }catch(e){$('status').textContent='Forbindelsesfeil';$('error').textContent=String(e)}
+}
+$('connect').onclick=()=>{if(timer)return;timer=setInterval(poll,1000);poll();buttons()};
+$('disconnect').onclick=()=>{clearInterval(timer);timer=null;$('status').textContent='Stoppet';buttons()};
+$('record').onclick=()=>{recorded=[];recording=true;deadline=Date.now()+15*60*1000;buttons()};
+$('stop').onclick=()=>{recording=false;buttons()};
+$('csv').onclick=()=>{
+ const fields=['utc','seq','kind','elapsed_ms','event_json'];
+ const quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+ const lines=[fields.join(',')];
+ for(const e of recorded)lines.push([e.utc,e.seq,e.kind,e.elapsed_ms,JSON.stringify(e)].map(quote).join(','));
+ const blob=new Blob([lines.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+ a.download='casa-diagnostics-'+new Date().toISOString().replace(/[:.]/g,'-')+'.csv';a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
+setInterval(()=>{
+ $('clock').textContent=new Date().toLocaleTimeString('no-NO');
+ if(recording){
+  const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));
+  $('progress').textContent='Opptak: '+recorded.length+' hendelser · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0')+' igjen';
+  if(left===0){recording=false;buttons()}
+ }else $('progress').textContent=recorded.length?'Opptak stoppet: '+recorded.length+' hendelser klare for CSV':'Opptak ikke startet';
+},1000);
+buttons();$('connect').click();
+</script></body></html>

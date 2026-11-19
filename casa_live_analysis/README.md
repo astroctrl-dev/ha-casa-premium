@@ -1,6 +1,6 @@
-# CASA Live Analysis – Home Assistant app (beta)
+# CASA Live Analysis – Home Assistant app
 
-Feature #14: read-only diagnostics, live view, 15-minute recording, CSV.
+Read-only CASA Premium diagnostics with live view, 15-minute recording, CSV export and automatic communication analysis.
 
 ## Compatibility with CASA Premium
 
@@ -9,9 +9,10 @@ CASA Live Analysis requires the diagnostic WebSocket API in the **Swegon CASA Pr
 | CASA Live Analysis app | Required CASA Premium integration |
 | --- | --- |
 | 0.1.1 | 1.3.0b1 or later compatible beta |
-| 0.2.0 | 1.3.0b1 or later compatible beta |
+| 0.2.0 | 1.3.0b1 or later with diagnostics API |
+| **1.0.0 (stable)** | **1.3.0 or later with diagnostics API** |
 
-**CASA Premium 1.2.0 and earlier do not provide the required diagnostics API.** The analysis app is optional and is not required for normal integration operation. Compatibility is defined by the availability of the `casa_premium/diagnostics` API, not by version numbering alone.
+**CASA Premium 1.2.0 and earlier do not provide the required diagnostics API.** Version 1.3.0 of the integration must be installed and loaded before using the stable app. The app release does not itself upgrade the integration. The analysis app is optional and is not required for normal integration operation. Compatibility is defined by the availability of the `casa_premium/diagnostics` API, not by version numbering alone.
 
 ## Install from HA app repository
 
@@ -22,25 +23,24 @@ CASA Live Analysis requires the diagnostic WebSocket API in the **Swegon CASA Pr
 
 The app is packaged in `casa_live_analysis/`, with `repository.yaml` at the repository root. It runs a separate HTTP UI behind Home Assistant Ingress, and polls the existing `casa_premium/diagnostics` WebSocket command. **No second connection to the PUSR gateway and no device writes.**
 
-## Automatic communication analysis (v0.2.0)
+## Automatic communication analysis
 
 Select **Analyser nå** in the app to inspect the currently retained diagnostic events. The report summarizes TCP receive intervals (median and maximum), pauses over 0.5 seconds with timestamps, CRC events, telegram command frequencies, and sensor update counts. The analysis is read-only and uses the existing CASA integration connection. The timestamps are Home Assistant receive observations, not physical RS-485 timestamps. The report is limited to buffered events; use CSV export for longer recordings.
 
 ## Scope and caveats
 
-- Needs CASA Premium v1.3.0b1 (or newer compatible beta) installed and its diagnostics WebSocket API registered.
+- Needs CASA Premium v1.3.0 or newer compatible integration installed and its diagnostics WebSocket API registered.
 - Live TCP connectivity, received byte count, valid telegrams, decoded frames, CRC errors, event stream.
-- 15-minute capture and CSV export in the browser. **Recording stops if the page is closed or refreshed**; this first beta is not a background recorder.
+- 15-minute capture and CSV export in the browser. **Recording stops if the page is closed or refreshed**; recording does not continue in the background.
 - Events are observed HA timestamps, not physical RS-485 bit timestamps.
 - Current diagnostics API does not expose raw telegram payload bytes; CSV contains the event JSON only.
 - The app retains at most 12,000 events in RAM; HA integration has a separate 4,096-event buffer. Buffer loss is reported.
 - The app uses a Python Alpine base image; installing requires container image download and build access.
-- Version 0.1.1 has been exercised on a Home Assistant test instance for live connection, metrics and CSV capture. Version 0.2.0 automatic analysis requires separate runtime verification.
-- Existing CASA Premium v1.2.0 production installation is unchanged.
+- Live connection, metrics and CSV capture were exercised on a Home Assistant test instance in an earlier app version. The v1.0.0 CSV button fix and automatic analysis still require runtime verification.
 
 ## Troubleshooting
 
-If the app opens but shows **Venter på diagnostikk-API**, open the app's Log tab. Look for `auth_invalid`, `not_found`, or connection errors. Check that the integration beta is loaded, and that the add-on has Supervisor API access. Do not paste tokens into logs or issues.
+If the app opens but shows **Venter på diagnostikk-API**, open the app's Log tab. Look for `auth_invalid`, `not_found`, or connection errors. Check that a compatible integration is loaded, and that the add-on has Supervisor API access. Do not paste tokens into logs or issues.
 
 ## Rollback
 

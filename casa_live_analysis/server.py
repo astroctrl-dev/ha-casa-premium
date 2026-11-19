@@ -139,56 +139,60 @@ async def diagnostics(request):
     return web.json_response(state.snapshot(after))
 
 
+async def integration_quality(action='status'):
+    async with ClientSession(timeout=ClientTimeout(total=20)) as session:
+        last_error = None
+        for url in UPSTREAMS:
+            try:
+                async with session.ws_connect(url, heartbeat=15) as ws:
+                    await ws.receive_json(timeout=10)
+                    await ws.send_json({'type': 'auth', 'access_token': TOKEN})
+                    auth = await ws.receive_json(timeout=10)
+                    if auth.get('type') != 'auth_ok':
+                        raise RuntimeError('HA authentication rejected')
+                    await ws.send_json({'id': 1, 'type': 'casa_premium/quality', 'action': action})
+                    result = await ws.receive_json(timeout=10)
+                    if not result.get('success'):
+                        raise RuntimeError(str(result.get('error')))
+                    return result['result']
+            except Exception as exc:
+                last_error = exc
+        raise RuntimeError('CASA quality API unavailable: ' + str(last_error))
+
+
 async def analysis_report(request):
     report = analyze(list(state.events), baseline=baseline, connected=state.connected)
-    # The integration is authoritative whenever it exposes the shared quality API.
-    shared = state.health.get('quality') if isinstance(state.health, dict) else None
-    if isinstance(shared, dict):
-        report['quality'] = shared
+    try:
+        shared = await integration_quality()
+        report['quality'] = {key: shared[key] for key in ('tcp', 'crc', 'sensor')}
         report['quality_source'] = 'integration'
-    else:
-        report['quality_source'] = 'legacy_local_fallback'
+    except RuntimeError as exc:
+        report['quality'] = {key: {'status': 'unknown'} for key in ('tcp', 'crc', 'sensor')}
+        report['quality_source'] = 'unavailable'
+        report['quality_error'] = str(exc)
     return web.json_response(report)
 
 
 async def baseline_status(request):
-    started = calibration['started']
-    elapsed = (datetime.now(timezone.utc)-started).total_seconds() if started else 0
-    return web.json_response({'baseline': baseline, 'source': 'calibrated' if BASELINE_FILE.exists() else 'default',
-                              'calibration_state': calibration['state'], 'elapsed_s': round(elapsed),
-                              'message': calibration['message']})
+    try:
+        shared = await integration_quality()
+    except RuntimeError as exc:
+        raise web.HTTPServiceUnavailable(text=str(exc))
+    return web.json_response({'baseline': shared.get('baseline'), 'source': 'integration',
+                              'calibration_state': shared.get('calibration_state')})
+
 
 async def baseline_action(request):
-    global baseline
-    data = await request.json()
-    action = data.get('action')
-    if action == 'start':
-        if calibration['state'] == 'running':
-            raise web.HTTPConflict(text='Calibration already running')
-        calibration.update(started=datetime.now(timezone.utc),events=deque(maxlen=250000),
-                           state='running',message='Samler trafikk i 30 minutter')
-    elif action == 'commit':
-        if calibration['state'] != 'running':
-            raise web.HTTPConflict(text='No active calibration')
-        if (datetime.now(timezone.utc)-calibration['started']).total_seconds()<1800:
-            raise web.HTTPConflict(text='Calibration has not reached 30 minutes')
-        try:
-            candidate=calibrate(list(calibration['events']))
-        except ValueError as exc:
-            calibration.update(state='rejected',message=str(exc))
-            raise web.HTTPUnprocessableEntity(text=str(exc))
-        BASELINE_FILE.parent.mkdir(parents=True,exist_ok=True)
-        BASELINE_FILE.write_text(json.dumps(candidate,indent=2),encoding='utf-8')
-        baseline=candidate
-        calibration.update(state='saved',message='Trafikken er registrert. Ny baseline er lagret.')
-    elif action == 'reset':
-        baseline=dict(DEFAULT_BASELINE)
-        BASELINE_FILE.unlink(missing_ok=True)
-        calibration.update(state='idle',started=None,events=deque(maxlen=250000),
-                           message='Standard baseline gjenopprettet')
-    else:
+    action = (await request.json()).get('action')
+    if action not in ('start', 'commit', 'reset'):
         raise web.HTTPBadRequest(text='Invalid action')
-    return await baseline_status(request)
+    try:
+        shared = await integration_quality(action)
+    except RuntimeError as exc:
+        raise web.HTTPServiceUnavailable(text=str(exc))
+    return web.json_response({'baseline': shared.get('baseline'), 'source': 'integration',
+                              'calibration_state': shared.get('calibration_state')})
+
 
 async def on_start(app):
     app["poll_task"] = asyncio.create_task(poll_forever(app))

@@ -12,6 +12,8 @@ from homeassistant.helpers import config_validation as cv, discovery
 from .decoder import FrameParser, decode, decode_actual_mode, crc16
 from .protocol_logger import ProtocolLogger
 from .quality import QualityMonitor
+from homeassistant.components import websocket_api
+from homeassistant.helpers.storage import Store
 
 DOMAIN = 'casa_premium'
 LOGGING_ENTITY = 'input_boolean.casa_ventilasjon_logging'
@@ -1234,6 +1236,10 @@ async def _async_start_hub(hass, host, port, config, entry=None):
             "CASA Premium already configured; remove duplicate YAML/UI setup"
         )
     hub = CasaHub(hass, host, port)
+    hub.baseline_store = Store(hass, 1, 'casa_premium_quality_baseline')
+    stored_baseline = await hub.baseline_store.async_load()
+    if isinstance(stored_baseline, dict) and isinstance(stored_baseline.get('sensor_intervals_ms'), dict):
+        hub.quality.baseline = stored_baseline
     hass.data[DOMAIN] = hub
     try:
         if entry is None:
@@ -1256,6 +1262,38 @@ async def _async_start_hub(hass, host, port, config, entry=None):
             DOMAIN, 'sync_clock', handle_sync_clock,
             schema=vol.Schema({vol.Optional('force', default=False): cv.boolean}),
         )
+        if not hass.data.get('casa_premium_quality_ws_registered'):
+            @websocket_api.websocket_command({
+                vol.Required('type'): 'casa_premium/quality',
+                vol.Optional('action', default='status'): vol.In(
+                    ['status', 'start', 'commit', 'reset']),
+            })
+            @websocket_api.async_response
+            async def quality_ws(hass, connection, msg):
+                active = hass.data.get(DOMAIN)
+                if active is None:
+                    connection.send_error(msg['id'], 'not_loaded', 'CASA integration not loaded')
+                    return
+                monitor = active.quality
+                try:
+                    action = msg['action']
+                    if action == 'start':
+                        monitor.start_calibration()
+                    elif action == 'commit':
+                        candidate = monitor.commit_calibration()
+                        await active.baseline_store.async_save(candidate)
+                    elif action == 'reset':
+                        monitor.reset_calibration()
+                        await active.baseline_store.async_save(monitor.baseline)
+                except ValueError as exc:
+                    connection.send_error(msg['id'], 'calibration_rejected', str(exc))
+                    return
+                result = monitor.snapshot()
+                result['calibration_state'] = (
+                    'running' if monitor.calibration_started is not None else 'idle')
+                connection.send_result(msg['id'], result)
+            websocket_api.async_register_command(hass, quality_ws)
+            hass.data['casa_premium_quality_ws_registered'] = True
         hub.task = hass.async_create_background_task(
             hub.run(), 'CASA Premium TCP receiver'
         )

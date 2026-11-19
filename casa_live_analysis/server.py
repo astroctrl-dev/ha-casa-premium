@@ -6,6 +6,7 @@ import os
 from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
+from analysis import analyze
 
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
 
@@ -125,6 +126,10 @@ async def diagnostics(request):
     return web.json_response(state.snapshot(after))
 
 
+async def analysis_report(request):
+    return web.json_response(analyze(list(state.events)))
+
+
 async def on_start(app):
     app["poll_task"] = asyncio.create_task(poll_forever(app))
 
@@ -138,6 +143,7 @@ async def on_cleanup(app):
 app = web.Application(client_max_size=1024 * 1024)
 app.router.add_get("/", index)
 app.router.add_get("/api/diagnostics", diagnostics)
+app.router.add_get("/api/analysis", analysis_report)
 app.on_startup.append(on_start)
 app.on_cleanup.append(on_cleanup)
 if __name__ == "__main__":

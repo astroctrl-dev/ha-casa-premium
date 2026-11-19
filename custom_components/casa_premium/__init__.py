@@ -11,6 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from .decoder import FrameParser, decode, decode_actual_mode, crc16
 from .protocol_logger import ProtocolLogger
+from .quality import QualityMonitor
 
 DOMAIN = 'casa_premium'
 LOGGING_ENTITY = 'input_boolean.casa_ventilasjon_logging'
@@ -233,6 +234,7 @@ class CasaHub:
         self.listeners = set()
         self.task = None
         self.parser = FrameParser()
+        self.quality = QualityMonitor()
         self.protocol_logger = ProtocolLogger(hass.config.config_dir)
         self._logging_was_on = False
         self._logged_frames = 0
@@ -1133,6 +1135,7 @@ class CasaHub:
                     self._cooling_status_event.clear()
                     self._reset_mode_readback()
                     self.connected = True
+                    self.quality.connection(True)
                     self.notify()
                     _LOGGER.info('CASA connected to %s:%s', self.host, self.port)
                     while True:
@@ -1147,12 +1150,16 @@ class CasaHub:
                         if not chunk:
                             _LOGGER.warning('CASA TCP stream closed; reconnecting')
                             break
+                        before_crc = self.parser.crc_errors
                         frames = list(self.parser.feed(chunk))
+                        crc_delta = self.parser.crc_errors - before_crc
                         changed = False
+                        observed_keys = set()
                         for frame in frames:
                             decoded = decode(frame)
                             if decoded:
                                 self.values.update(decoded)
+                                observed_keys.update(decoded)
                                 changed = True
                             self._process_service_frame(frame)
                             self._process_week_frame(frame)
@@ -1166,6 +1173,7 @@ class CasaHub:
                                 self._process_mode_response(frame)
                             elif frame[6] == 0x73:
                                 self._process_mode_status(frame)
+                        self.quality.receive(len(chunk), len(frames), crc_delta, observed_keys)
                         if changed:
                             self.notify()
                         await self._process_logging(frames)
@@ -1179,6 +1187,7 @@ class CasaHub:
                     # Mark disconnected before awaiting socket shutdown, so
                     # concurrent mode writes cannot use the stale connection.
                     self.connected = False
+                    self.quality.connection(False)
                     self.writer = None
                     self.values.clear()
                     self.clock_data = None

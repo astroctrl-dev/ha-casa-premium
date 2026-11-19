@@ -450,6 +450,20 @@ class CasaDiagnosticStatusSensor(CasaEntity, SensorEntity):
         details = {key: (value.isoformat() if hasattr(value, "isoformat") else value)
                    for key in keys if (value := info[key]) is not None}
         details["reason"] = info["reasons"][self.key]
+        if self.key == "raw_bytes":
+            # Native HA icon colors are frontend-owned. Expose a stable,
+            # readable colored indicator without changing the enum state.
+            state = info["raw_bytes"]
+            details["status_indicator"] = (
+                "🔵" if state == "ok" else
+                "🔴" if state == "error" else "⚪"
+            )
+            details["status_label"] = (
+                "Receiving raw bytes" if state == "ok" else
+                "No raw bytes within 5 seconds" if state == "error" else
+                "TCP unavailable" if state == "not_measurable" else
+                "Waiting for raw bytes"
+            )
         return details
 
     async def async_added_to_hass(self):

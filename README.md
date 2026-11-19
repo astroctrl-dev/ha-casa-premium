@@ -8,6 +8,10 @@ Monitor temperatures, fan information and ventilation status from Home Assistant
 
 This is an unofficial community integration. It does not send control or clock-setting commands.
 
+## 1.2.0b3 pre-release
+
+This opt-in beta adds four read-only diagnostic states on the CASA device: TCP connection, serial bytes, decoded CASA telegrams and fresh sensor coverage. They start automatically after saving the gateway address and port. States include colored symbols and text, with last data times, ages and reasons. The timing thresholds are being checked against a physical installation; please report unexpected states in Issues. This beta also validates a proposed new IP/port against decoded CASA data before saving, with a native Home Assistant pending progress dialog (15–60 seconds). Cancel discards the candidate and retains the saved endpoint. Native progress does not provide a custom blinking orange lamp. The stable release remains 1.1.0.
+
 ## Features
 
 * **Temperatures at a glance** — outdoor, supply, extract and exhaust readings, where provided by your unit.
@@ -132,3 +136,16 @@ We acknowledge and appreciate the earlier work of the openHAB community.
 English, Norwegian Bokmål and Norwegian Nynorsk are included. Entity names use Home Assistant's server language when created; states and dialogs use the interface language. Existing entity IDs and manually assigned names are preserved. English is the fallback for other languages.
 
 Temperature values follow Home Assistant's Celsius/Fahrenheit setting; an explicit unit choice on an individual sensor takes priority. See [languages and units](docs/languages-and-units.md) for details and automation considerations.
+
+
+## Beta 1.2.0b10 – connection diagnostics
+
+Four diagnostic stages distinguish TCP connectivity, incoming serial bytes, decoded CASA telegrams and fresh sensor readings. The **Serial bytes** indicator is blue (ok) when bytes arrived within the last 5 seconds, and red (error) when no bytes arrived for 5 seconds or more; there is no yellow intermediate state. It measures bytes received from the gateway over TCP, **not** whether RS-485 framing or CASA protocol settings are correct. The diagnostic state refreshes once per second.
+
+**CASA telegrams** requires successfully decoded recent telegrams; **Fresh sensor data** is green when all ten regularly expected fields were updated within 120 seconds, yellow when only some were updated, and red when none were updated. During startup or when TCP is disconnected, stages may show waiting/not measurable. No ICMP ping or new user configuration is introduced.
+
+If TCP and Serial bytes are green but CASA telegrams are not, check gateway baud rate (known working reference: 38,400 baud), data bits, parity, stop bits, RS-485 wiring and protocol compatibility. The baud rate specifies transmission speed, not telegram recurrence interval. These time thresholds are preliminary and will be calibrated using observed CASA traffic.
+
+### Beta installation
+
+Use the public HACS repository `https://github.com/astroctrl-dev/ha-casa-premium` and select the published prerelease `v1.2.0b10` when available. Back up your HA configuration, install the selected beta, restart Home Assistant, and verify the four diagnostic states. To roll back, reinstall the previously working release and restart HA. The release must be explicitly published before HACS can install this beta.

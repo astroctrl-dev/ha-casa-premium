@@ -2,7 +2,7 @@
 import socket
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 import voluptuous as vol
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -11,6 +11,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from .decoder import FrameParser, decode, decode_actual_mode, crc16
 from .protocol_logger import ProtocolLogger
+from .diagnostics import health
+from .diagnostic_events import DiagnosticEvents
+from homeassistant.components import websocket_api
 
 DOMAIN = 'casa_premium'
 LOGGING_ENTITY = 'input_boolean.casa_ventilasjon_logging'
@@ -215,6 +218,19 @@ class CasaHub:
         self.hass, self.host, self.port = hass, host, port
         self.values = {}
         self.connected = False
+        # Passive diagnostics on the sole CASA receiver; no probe socket or TX.
+        self.diagnostic_started_at = datetime.now(timezone.utc)
+        self.diagnostic_connected_at = None
+        self.diagnostic_last_byte_at = None
+        self.diagnostic_last_frame_at = None
+        self.diagnostic_last_decoded_at = None
+        self.diagnostic_received_bytes = 0
+        self.diagnostic_valid_frames = 0
+        self.diagnostic_decoded_frames = 0
+        self.diagnostic_last_error = None
+        self.diagnostic_sensor_seen = {}
+        self.diagnostic_task = None
+        self.diagnostic_events = DiagnosticEvents()
         self.writer = None
         self.send_lock = asyncio.Lock()
         self.selected_mode = None
@@ -280,6 +296,15 @@ class CasaHub:
     def notify(self):
         for listener in tuple(self.listeners):
             listener()
+
+    def diagnostic_health(self):
+        return health(self)
+
+    async def refresh_diagnostics(self):
+        """Refresh age-based states even when no bytes arrive."""
+        while True:
+            await asyncio.sleep(1)
+            self.notify()
 
     def logging_enabled(self):
         state = self.hass.states.get(LOGGING_ENTITY)
@@ -1112,6 +1137,7 @@ class CasaHub:
                     self.writer = writer
                     self.parser = FrameParser()
                     self.values.clear()
+                    self.diagnostic_sensor_seen.clear()
                     self.clock_data = None
                     self.clock_observed_at = None
                     self._clock_status_event.clear()
@@ -1133,6 +1159,8 @@ class CasaHub:
                     self._cooling_status_event.clear()
                     self._reset_mode_readback()
                     self.connected = True
+                    self.diagnostic_connected_at = datetime.now(timezone.utc)
+                    self.diagnostic_last_error = None
                     self.notify()
                     _LOGGER.info('CASA connected to %s:%s', self.host, self.port)
                     while True:
@@ -1140,18 +1168,38 @@ class CasaHub:
                             chunk = await asyncio.wait_for(
                                 reader.read(4096), timeout=RECEIVE_TIMEOUT_SECONDS)
                         except asyncio.TimeoutError:
+                            self.diagnostic_last_error = 'receive_timeout'
                             _LOGGER.warning(
                                 'CASA receive watchdog: no TCP data for %ss; reconnecting',
                                 RECEIVE_TIMEOUT_SECONDS)
                             break
                         if not chunk:
+                            self.diagnostic_last_error = 'stream_closed'
                             _LOGGER.warning('CASA TCP stream closed; reconnecting')
                             break
+                        received_at = datetime.now(timezone.utc)
+                        self.diagnostic_events.record('tcp_receive', bytes=len(chunk))
+                        crc_before = self.parser.crc_errors
+                        self.diagnostic_received_bytes += len(chunk)
+                        self.diagnostic_last_byte_at = received_at
                         frames = list(self.parser.feed(chunk))
+                        crc_delta = self.parser.crc_errors - crc_before
+                        if crc_delta:
+                            self.diagnostic_events.record('crc_error', count=crc_delta)
+                        if frames:
+                            self.diagnostic_valid_frames += len(frames)
+                            self.diagnostic_last_frame_at = received_at
                         changed = False
                         for frame in frames:
+                            self.diagnostic_events.record('telegram', command=f'0x{frame[6]:02X}', bytes=len(frame))
                             decoded = decode(frame)
                             if decoded:
+                                self.diagnostic_decoded_frames += 1
+                                self.diagnostic_last_decoded_at = received_at
+                                self.diagnostic_sensor_seen.update(
+                                    {key: received_at for key in decoded}
+                                )
+                                self.diagnostic_events.record('sensor_observation', command=f'0x{frame[6]:02X}', keys=list(decoded))
                                 self.values.update(decoded)
                                 changed = True
                             self._process_service_frame(frame)
@@ -1166,14 +1214,16 @@ class CasaHub:
                                 self._process_mode_response(frame)
                             elif frame[6] == 0x73:
                                 self._process_mode_status(frame)
-                        if changed:
-                            self.notify()
+                        # Diagnostics update even when a valid frame has no sensor fields.
+                        self.notify()
                         await self._process_logging(frames)
                 except asyncio.CancelledError:
                     raise
                 except (OSError, asyncio.TimeoutError) as err:
+                    self.diagnostic_last_error = type(err).__name__
                     _LOGGER.warning('CASA connection error: %s', err)
                 except Exception:
+                    self.diagnostic_last_error = 'unexpected_receiver_error'
                     _LOGGER.exception('Unexpected CASA receiver error')
                 finally:
                     # Mark disconnected before awaiting socket shutdown, so
@@ -1250,14 +1300,41 @@ async def _async_start_hub(hass, host, port, config, entry=None):
         hub.task = hass.async_create_background_task(
             hub.run(), 'CASA Premium TCP receiver'
         )
+        hub.diagnostic_task = hass.async_create_background_task(
+            hub.refresh_diagnostics(), 'CASA Premium diagnostic refresh'
+        )
     except Exception:
         hass.data.pop(DOMAIN, None)
         raise
     return True
 
 
+@websocket_api.websocket_command({
+    vol.Required("type"): "casa_premium/diagnostics",
+    vol.Optional("after", default=0): vol.All(vol.Coerce(int), vol.Range(min=0)),
+})
+@websocket_api.async_response
+async def async_casa_diagnostics(hass, connection, msg):
+    """Authenticated HA websocket snapshot; never writes to CASA."""
+    hub = hass.data.get(DOMAIN)
+    if hub is None:
+        connection.send_error(msg["id"], "not_loaded", "CASA Premium is not loaded")
+        return
+    connection.send_result(msg["id"], {
+        "connected": hub.connected,
+        "health": {
+            "received_bytes": hub.diagnostic_received_bytes,
+            "valid_frames": hub.diagnostic_valid_frames,
+            "decoded_frames": hub.diagnostic_decoded_frames,
+            "crc_errors": hub.parser.crc_errors,
+        },
+        **hub.diagnostic_events.snapshot(msg["after"]),
+    })
+
+
 async def async_setup(hass, config):
     """Initialize installations with legacy YAML configuration."""
+    websocket_api.async_register_command(hass, async_casa_diagnostics)
     if DOMAIN not in config:
         return True
     opts = config[DOMAIN]
@@ -1292,8 +1369,11 @@ async def async_unload_entry(hass, entry):
     if not unloaded:
         return False
     hub = hass.data.pop(DOMAIN, None)
-    if hub is not None and hub.task is not None:
-        hub.task.cancel()
-        await asyncio.gather(hub.task, return_exceptions=True)
+    if hub is not None:
+        tasks = [task for task in (hub.task, hub.diagnostic_task) if task is not None]
+        for task in tasks:
+            task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
     hass.services.async_remove(DOMAIN, 'sync_clock')
     return True

@@ -1130,6 +1130,134 @@
           "Supply": "Tilluft",
           "Extract": "Avtrekk"
         }
+      },
+      "diagnostic_tcp": {
+        "name": "TCP-forbindelse",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Redusert",
+          "error": "🔴 Feil",
+          "waiting": "⚪ Venter",
+          "not_measurable": "⚪ Kan ikke måles"
+        },
+        "state_attributes": {
+          "last_error": {
+            "name": "Siste feil"
+          },
+          "reason": {
+            "name": "Årsak"
+          }
+        }
+      },
+      "diagnostic_raw_bytes": {
+        "name": "Serielle råbytes",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Redusert",
+          "error": "🔴 Feil",
+          "waiting": "⚪ Venter",
+          "not_measurable": "⚪ Kan ikke måles"
+        },
+        "state_attributes": {
+          "raw_age_seconds": {
+            "name": "Alder rådata (s)"
+          },
+          "last_byte_at": {
+            "name": "Siste råbyte"
+          },
+          "received_bytes": {
+            "name": "Mottatte byte"
+          },
+          "reason": {
+            "name": "Årsak"
+          }
+        }
+      },
+      "diagnostic_telegram": {
+        "name": "CASA-telegrammer",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Redusert",
+          "error": "🔴 Feil",
+          "waiting": "⚪ Venter",
+          "not_measurable": "⚪ Kan ikke måles"
+        },
+        "state_attributes": {
+          "frame_age_seconds": {
+            "name": "Alder gyldig ramme (s)"
+          },
+          "decoded_age_seconds": {
+            "name": "Alder dekodede data (s)"
+          },
+          "last_frame_at": {
+            "name": "Siste gyldige ramme"
+          },
+          "last_decoded_at": {
+            "name": "Siste dekodede data"
+          },
+          "valid_frames": {
+            "name": "Gyldige rammer"
+          },
+          "decoded_frames": {
+            "name": "Dekodede rammer"
+          },
+          "crc_errors": {
+            "name": "CRC-feil"
+          },
+          "reason": {
+            "name": "Årsak"
+          }
+        }
+      },
+      "diagnostic_sensors": {
+        "name": "Ferske sensordata",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Redusert",
+          "error": "🔴 Feil",
+          "waiting": "⚪ Venter",
+          "not_measurable": "⚪ Kan ikke måles"
+        },
+        "state_attributes": {
+          "coverage_percent": {
+            "name": "Andel ferske sensorer (%)"
+          },
+          "fresh_sensors": {
+            "name": "Ferske sensorer"
+          },
+          "expected_sensors": {
+            "name": "Forventede sensorer"
+          },
+          "missing_critical": {
+            "name": "Manglende kritiske sensorer"
+          },
+          "reason": {
+            "name": "Årsak"
+          }
+        }
+      },
+      "connection_status": {
+        "name": "Tilkoblingsstatus",
+        "state": {
+          "connected": "🟢 Tilkoblet",
+          "degraded": "🟡 Redusert",
+          "disconnected": "🔴 Frakoblet",
+          "waiting": "⚪ Venter"
+        },
+        "state_attributes": {
+          "tcp": {
+            "name": "TCP/IP"
+          },
+          "raw_bytes": {
+            "name": "Serielle råbytes"
+          },
+          "telegram": {
+            "name": "CASA-telegrammer"
+          },
+          "sensors": {
+            "name": "Ferske sensordata"
+          }
+        }
       }
     },
     "binary_sensor": {
@@ -1667,7 +1795,7 @@
     "step": {
       "init": {
         "title": "Endre CASA-tilkobling",
-        "description": "Endre IP-adresse og TCP-port. Eksisterende oppsett beholdes hvis tilkobling mislykkes.",
+        "description": "Endre IP-adresse og TCP-port. Eksisterende oppsett beholdes hvis tilkobling mislykkes.\n\nGjeldende tilkoblingsstatus: {connection_status}",
         "data": {
           "host": "IP-adresse eller vertsnavn",
           "port": "TCP-port"
@@ -1676,11 +1804,18 @@
           "host": "Lokal adresse til RS-485-konverteren.",
           "port": "TCP-serverport på konverteren, normalt 8899."
         }
+      },
+      "save_anyway": {
+        "title": "Tilkoblingen kunne ikke bekreftes",
+        "description": "CASA-kommunikasjon kunne ikke bekreftes for {host}:{port}.\\n\\n{connection_status}\\n\\nDu kan likevel lagre IP-adresse og port og sjekke diagnostikk på integrasjonssiden. Dette erstatter den tidligere forbindelsen. Lukk dialogen for å avbryte."
       }
     },
     "error": {
       "invalid_host": "Ugyldig IP-adresse eller vertsnavn.",
       "cannot_connect": "Kan ikke koble til gatewayen. Forrige konfigurasjon beholdes."
+    },
+    "progress": {
+      "validate_connection": "Venter på CASA-tilkobling (15–60 sekunder). Avbryt for å beholde lagrede innstillinger."
     }
   }
 }

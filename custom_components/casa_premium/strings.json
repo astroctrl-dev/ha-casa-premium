@@ -1130,6 +1130,134 @@
           "Supply": "Supply air",
           "Extract": "Extract air"
         }
+      },
+      "diagnostic_tcp": {
+        "name": "TCP connection",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Degraded",
+          "error": "🔴 Error",
+          "waiting": "⚪ Waiting",
+          "not_measurable": "⚪ Not measurable"
+        },
+        "state_attributes": {
+          "last_error": {
+            "name": "Last error"
+          },
+          "reason": {
+            "name": "Reason"
+          }
+        }
+      },
+      "diagnostic_raw_bytes": {
+        "name": "Serial bytes",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Degraded",
+          "error": "🔴 Error",
+          "waiting": "⚪ Waiting",
+          "not_measurable": "⚪ Not measurable"
+        },
+        "state_attributes": {
+          "raw_age_seconds": {
+            "name": "Raw data age (s)"
+          },
+          "last_byte_at": {
+            "name": "Last byte at"
+          },
+          "received_bytes": {
+            "name": "Received bytes"
+          },
+          "reason": {
+            "name": "Reason"
+          }
+        }
+      },
+      "diagnostic_telegram": {
+        "name": "CASA telegrams",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Degraded",
+          "error": "🔴 Error",
+          "waiting": "⚪ Waiting",
+          "not_measurable": "⚪ Not measurable"
+        },
+        "state_attributes": {
+          "frame_age_seconds": {
+            "name": "Valid frame age (s)"
+          },
+          "decoded_age_seconds": {
+            "name": "Decoded data age (s)"
+          },
+          "last_frame_at": {
+            "name": "Last valid frame at"
+          },
+          "last_decoded_at": {
+            "name": "Last decoded data at"
+          },
+          "valid_frames": {
+            "name": "Valid frames"
+          },
+          "decoded_frames": {
+            "name": "Decoded frames"
+          },
+          "crc_errors": {
+            "name": "CRC errors"
+          },
+          "reason": {
+            "name": "Reason"
+          }
+        }
+      },
+      "diagnostic_sensors": {
+        "name": "Fresh sensor data",
+        "state": {
+          "ok": "🟢 OK",
+          "degraded": "🟡 Degraded",
+          "error": "🔴 Error",
+          "waiting": "⚪ Waiting",
+          "not_measurable": "⚪ Not measurable"
+        },
+        "state_attributes": {
+          "coverage_percent": {
+            "name": "Fresh sensor coverage (%)"
+          },
+          "fresh_sensors": {
+            "name": "Fresh sensors"
+          },
+          "expected_sensors": {
+            "name": "Expected sensors"
+          },
+          "missing_critical": {
+            "name": "Missing critical sensors"
+          },
+          "reason": {
+            "name": "Reason"
+          }
+        }
+      },
+      "connection_status": {
+        "name": "Connection status",
+        "state": {
+          "connected": "🟢 Connected",
+          "degraded": "🟡 Degraded",
+          "disconnected": "🔴 Disconnected",
+          "waiting": "⚪ Waiting"
+        },
+        "state_attributes": {
+          "tcp": {
+            "name": "TCP/IP"
+          },
+          "raw_bytes": {
+            "name": "Serial bytes"
+          },
+          "telegram": {
+            "name": "CASA telegrams"
+          },
+          "sensors": {
+            "name": "Fresh sensor data"
+          }
+        }
       }
     },
     "binary_sensor": {
@@ -1667,7 +1795,7 @@
     "step": {
       "init": {
         "title": "Change CASA connection",
-        "description": "Change IP address and TCP port. Existing settings are kept if connection fails.",
+        "description": "Change IP address and TCP port. Existing settings are kept if connection fails.\n\nCurrent connection status: {connection_status}",
         "data": {
           "host": "Gateway IP address or hostname",
           "port": "TCP port"
@@ -1676,11 +1804,18 @@
           "host": "Local address of the RS-485 converter.",
           "port": "TCP server port on the converter, normally 8899."
         }
+      },
+      "save_anyway": {
+        "title": "Connection validation failed",
+        "description": "CASA communication could not be confirmed for {host}:{port}.\\n\\n{connection_status}\\n\\nYou can save the IP address and port anyway and check diagnostics on the integration page. This replaces the previous connection. Close this dialog to cancel."
       }
     },
     "error": {
       "invalid_host": "Invalid IP address or hostname.",
       "cannot_connect": "Cannot connect to gateway. Previous settings are preserved."
+    },
+    "progress": {
+      "validate_connection": "Pending CASA connection (15–60 seconds). Cancel to retain saved settings."
     }
   }
 }

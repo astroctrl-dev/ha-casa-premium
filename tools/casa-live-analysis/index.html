@@ -69,8 +69,8 @@ function appendEvents(data){
  const tbody=$('rows');tbody.replaceChildren();
  for(const e of rows.slice(0,100)){
   const tr=document.createElement('tr');
-  const t=document.createElement('td');t.textContent=e.timestamp??e.time??'';
-  const k=document.createElement('td');k.textContent=e.type??e.kind??'';
+  const t=document.createElement('td');t.textContent=e.utc??e.timestamp??e.time??'';
+  const k=document.createElement('td');k.textContent=e.kind??e.type??'';
   const d=document.createElement('td');d.textContent=JSON.stringify(e);
   tr.append(t,k,d);tbody.append(tr);
  }
@@ -111,7 +111,7 @@ $('stop').onclick=()=>{recording=false;updateButtons()};
 $('csv').onclick=()=>{
  const headers=['timestamp','seq','type','elapsed_ms','event_json'];
  const lines=[headers.join(',')];
- for(const e of recorded)lines.push([e.timestamp??e.time,e.seq,e.type??e.kind,e.elapsed_ms,JSON.stringify(e)].map(csvEscape).join(','));
+ for(const e of recorded)lines.push([e.utc??e.timestamp??e.time,e.seq,e.kind??e.type,e.elapsed_ms,JSON.stringify(e)].map(csvEscape).join(','));
  const blob=new Blob([lines.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'});
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='casa-diagnostics-'+new Date().toISOString().replace(/[:.]/g,'-')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 };

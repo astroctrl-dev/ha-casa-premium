@@ -1,5 +1,7 @@
 """Swegon CASA Premium TCP integration with protocol logging and mode control."""
 import socket
+from collections import deque
+from datetime import timezone
 import asyncio
 import logging
 from datetime import datetime
@@ -237,6 +239,8 @@ class CasaHub:
         self.task = None
         self.parser = FrameParser()
         self.quality = QualityMonitor()
+        self.diagnostic_events = deque(maxlen=12000)
+        self.diagnostic_seq = 0
         self.protocol_logger = ProtocolLogger(hass.config.config_dir)
         self._logging_was_on = False
         self._logged_frames = 0
@@ -1176,6 +1180,15 @@ class CasaHub:
                             elif frame[6] == 0x73:
                                 self._process_mode_status(frame)
                         self.quality.receive(len(chunk), len(frames), crc_delta, observed_keys)
+                        self.diagnostic_seq += 1
+                        self.diagnostic_events.append({
+                            'seq': self.diagnostic_seq,
+                            'timestamp': datetime.now(timezone.utc).isoformat(),
+                            'bytes': len(chunk), 'frames': len(frames),
+                            'crc_errors': crc_delta,
+                            'raw_hex': chunk.hex(),
+                            'sensor_keys': sorted(observed_keys),
+                        })
                         if changed:
                             self.notify()
                         await self._process_logging(frames)
@@ -1292,6 +1305,27 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                 result['calibration_state'] = (
                     'running' if monitor.calibration_started is not None else 'idle')
                 connection.send_result(msg['id'], result)
+            @websocket_api.websocket_command({
+                vol.Required('type'): 'casa_premium/diagnostics',
+                vol.Optional('after', default=0): vol.All(vol.Coerce(int), vol.Range(min=0)),
+            })
+            @websocket_api.async_response
+            async def diagnostics_ws(hass, connection, msg):
+                active = hass.data.get(DOMAIN)
+                if active is None:
+                    connection.send_error(msg['id'], 'not_loaded', 'CASA integration not loaded')
+                    return
+                events = active.diagnostic_events
+                after = msg['after']
+                oldest = events[0]['seq'] if events else active.diagnostic_seq + 1
+                connection.send_result(msg['id'], {
+                    'connected': active.connected,
+                    'health': {'quality': active.quality.snapshot()},
+                    'latest_seq': active.diagnostic_seq,
+                    'lost': max(0, oldest - after - 1) if after else 0,
+                    'events': [e for e in events if e['seq'] > after],
+                })
+            websocket_api.async_register_command(hass, diagnostics_ws)
             websocket_api.async_register_command(hass, quality_ws)
             hass.data['casa_premium_quality_ws_registered'] = True
         hub.task = hass.async_create_background_task(

@@ -53,6 +53,7 @@ function appendEvents(data){
   if(recording)recorded.push(e);
  }
  $('events').textContent=String(rows.length);
+ buttons();
  const body=$('rows');body.replaceChildren();
  for(const e of rows.slice(0,100)){
   const tr=document.createElement('tr');

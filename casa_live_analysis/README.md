@@ -11,6 +11,10 @@ Feature #14: read-only diagnostics, live view, 15-minute recording, CSV.
 
 The app is packaged in `casa_live_analysis/`, with `repository.yaml` at the repository root. It runs a separate HTTP UI behind Home Assistant Ingress, and polls the existing `casa_premium/diagnostics` WebSocket command. **No second connection to the PUSR gateway and no device writes.**
 
+## Automatic communication analysis (v0.2.0)
+
+Select **Analyser nå** in the app to inspect the currently retained diagnostic events. The report summarizes TCP receive intervals (median and maximum), pauses over 0.5 seconds with timestamps, CRC events, telegram command frequencies, and sensor update counts. The analysis is read-only and uses the existing CASA integration connection. The timestamps are Home Assistant receive observations, not physical RS-485 timestamps. The report is limited to buffered events; use CSV export for longer recordings.
+
 ## Scope and caveats
 
 - Needs CASA Premium v1.3.0b1 (or newer compatible beta) installed and its diagnostics WebSocket API registered.
@@ -20,7 +24,7 @@ The app is packaged in `casa_live_analysis/`, with `repository.yaml` at the repo
 - Current diagnostics API does not expose raw telegram payload bytes; CSV contains the event JSON only.
 - The app retains at most 12,000 events in RAM; HA integration has a separate 4,096-event buffer. Buffer loss is reported.
 - The app uses a Python Alpine base image; installing requires container image download and build access.
-- No HA-QA installation or runtime test has been performed. Check app log, API auth, live events and CSV on HA-QA before marking verified.
+- Version 0.1.1 has been exercised on a Home Assistant test instance for live connection, metrics and CSV capture. Version 0.2.0 automatic analysis requires separate runtime verification.
 - Existing CASA Premium v1.2.0 production installation is unchanged.
 
 ## Troubleshooting

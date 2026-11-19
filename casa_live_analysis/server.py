@@ -6,7 +6,7 @@ import os
 from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
-from analysis import analyze
+from analysis import analyze, calibrate, DEFAULT_BASELINE
 
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
 
@@ -20,6 +20,17 @@ UPSTREAMS = (
     "ws://homeassistant:80/api/websocket",
 )
 MAX_EVENTS = 12000
+BASELINE_FILE = Path('/data/baseline.json')
+
+def read_baseline():
+    try:
+        return json.loads(BASELINE_FILE.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return dict(DEFAULT_BASELINE)
+
+baseline = read_baseline()
+calibration = {'started': None, 'events': deque(maxlen=250000), 'state': 'idle', 'message': ''}
+
 
 
 class State:
@@ -87,6 +98,8 @@ async def consume_ws(session, url):
                 if not isinstance(seq, int) or seq <= state.last_seq:
                     continue
                 state.events.append(event)
+                if calibration['state'] == 'running':
+                    calibration['events'].append(event)
                 state.last_seq = seq
             await asyncio.sleep(1)
 
@@ -127,8 +140,47 @@ async def diagnostics(request):
 
 
 async def analysis_report(request):
-    return web.json_response(analyze(list(state.events)))
+    return web.json_response(analyze(list(state.events), baseline=baseline, connected=state.connected))
 
+
+async def baseline_status(request):
+    started = calibration['started']
+    elapsed = (datetime.now(timezone.utc)-started).total_seconds() if started else 0
+    return web.json_response({'baseline': baseline, 'source': 'calibrated' if BASELINE_FILE.exists() else 'default',
+                              'calibration_state': calibration['state'], 'elapsed_s': round(elapsed),
+                              'message': calibration['message']})
+
+async def baseline_action(request):
+    global baseline
+    data = await request.json()
+    action = data.get('action')
+    if action == 'start':
+        if calibration['state'] == 'running':
+            raise web.HTTPConflict(text='Calibration already running')
+        calibration.update(started=datetime.now(timezone.utc),events=deque(maxlen=250000),
+                           state='running',message='Samler trafikk i 30 minutter')
+    elif action == 'commit':
+        if calibration['state'] != 'running':
+            raise web.HTTPConflict(text='No active calibration')
+        if (datetime.now(timezone.utc)-calibration['started']).total_seconds()<1800:
+            raise web.HTTPConflict(text='Calibration has not reached 30 minutes')
+        try:
+            candidate=calibrate(list(calibration['events']))
+        except ValueError as exc:
+            calibration.update(state='rejected',message=str(exc))
+            raise web.HTTPUnprocessableEntity(text=str(exc))
+        BASELINE_FILE.parent.mkdir(parents=True,exist_ok=True)
+        BASELINE_FILE.write_text(json.dumps(candidate,indent=2),encoding='utf-8')
+        baseline=candidate
+        calibration.update(state='saved',message='Trafikken er registrert. Ny baseline er lagret.')
+    elif action == 'reset':
+        baseline=dict(DEFAULT_BASELINE)
+        BASELINE_FILE.unlink(missing_ok=True)
+        calibration.update(state='idle',started=None,events=deque(maxlen=250000),
+                           message='Standard baseline gjenopprettet')
+    else:
+        raise web.HTTPBadRequest(text='Invalid action')
+    return await baseline_status(request)
 
 async def on_start(app):
     app["poll_task"] = asyncio.create_task(poll_forever(app))
@@ -144,6 +196,8 @@ app = web.Application(client_max_size=1024 * 1024)
 app.router.add_get("/", index)
 app.router.add_get("/api/diagnostics", diagnostics)
 app.router.add_get("/api/analysis", analysis_report)
+app.router.add_get("/api/baseline", baseline_status)
+app.router.add_post("/api/baseline", baseline_action)
 app.on_startup.append(on_start)
 app.on_cleanup.append(on_cleanup)
 if __name__ == "__main__":

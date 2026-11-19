@@ -5,6 +5,8 @@ No device writes. All times are HA monotonic receive observations, not RS-485 wi
 from collections import deque, defaultdict
 from statistics import median
 from time import monotonic
+import json
+from pathlib import Path
 
 DEFAULT_BASELINE = {"tcp_median_ms": 150.0, "sensor_intervals_ms": {}}
 EXPECTED_SENSORS = ("outdoor_temp", "supply_temp", "extract_temp", "exhaust_temp",
@@ -22,6 +24,11 @@ class QualityMonitor:
         self.sensor_updates = defaultdict(lambda: deque(maxlen=100))
         self.last_seen = {}
         self.reconnects = deque(maxlen=100)
+        self.calibration_started = None
+        self.calibration_receives = []
+        self.calibration_sensors = defaultdict(list)
+        self.calibration_crc_start = 0
+        self.calibration_frames_start = 0
 
     def connection(self, connected):
         now = monotonic()
@@ -33,13 +40,52 @@ class QualityMonitor:
         now = monotonic()
         if byte_count:
             self.receives.append(now)
+            if self.calibration_started is not None:
+                self.calibration_receives.append(now)
         self.valid_frames += valid_frames
         self.crc_errors += crc_errors
         for key in sensor_keys:
             if key not in EXPECTED_SENSORS:
                 continue
             self.sensor_updates[key].append(now)
+            if self.calibration_started is not None:
+                self.calibration_sensors[key].append(now)
             self.last_seen[key] = now
+
+    def start_calibration(self):
+        if self.calibration_started is not None:
+            raise ValueError('Calibration already running')
+        self.calibration_started = monotonic()
+        self.calibration_receives = []
+        self.calibration_sensors = defaultdict(list)
+        self.calibration_crc_start = self.crc_errors
+        self.calibration_frames_start = self.valid_frames
+
+    def commit_calibration(self):
+        if self.calibration_started is None or monotonic() - self.calibration_started < 1800:
+            raise ValueError('Calibration requires 30 minutes')
+        crc = self.crc_errors - self.calibration_crc_start
+        valid = self.valid_frames - self.calibration_frames_start
+        if valid + crc < MIN_CRC_SAMPLES or crc / (valid + crc) >= 0.001:
+            raise ValueError('Insufficient or poor CRC quality')
+        receive = [b-a for a,b in zip(self.calibration_receives, self.calibration_receives[1:])]
+        if len(receive) < 30 or any(g > 6 for g in receive):
+            raise ValueError('Insufficient or interrupted TCP traffic')
+        sensor_intervals = {}
+        for key in EXPECTED_SENSORS:
+            times = self.calibration_sensors[key]
+            if len(times) < 11:
+                raise ValueError(f'Insufficient sensor observations: {key}')
+            sensor_intervals[key] = round(1000 * median(b-a for a,b in zip(times,times[1:])), 1)
+        candidate = {'tcp_median_ms': round(1000*median(receive),1),
+                     'sensor_intervals_ms': sensor_intervals}
+        self.baseline = candidate
+        self.calibration_started = None
+        return candidate
+
+    def reset_calibration(self):
+        self.baseline = dict(DEFAULT_BASELINE)
+        self.calibration_started = None
 
     def snapshot(self):
         now = monotonic()

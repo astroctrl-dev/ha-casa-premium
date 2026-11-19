@@ -14,7 +14,7 @@ button{background:#2178b6;color:white;cursor:pointer}button:disabled{opacity:.45
 #status{font-weight:700}table{border-collapse:collapse;width:100%;font-size:.82rem}
 th,td{text-align:left;border-bottom:1px solid #354554;padding:7px;overflow-wrap:anywhere}
 .scroller{max-height:360px;overflow:auto}#error{color:#ffb6a6;white-space:pre-wrap}
-</style></head><body>
+.quality{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.quality>div{background:#14212c;padding:12px;border-radius:8px}.ok{color:#66d69a}.warning{color:#f5cb67}.error{color:#ff8e83}.unknown{color:#a6b8c8}</style></head><body>
 <h1>CASA Premium · Live analyse</h1>
 <p class="muted">Feature #14 · Kun lesing · Bruker eksisterende CASA TCP-forbindelse</p>
 <section class="panel">
@@ -35,7 +35,7 @@ th,td{text-align:left;border-bottom:1px solid #354554;padding:7px;overflow-wrap:
 <div class="metric">CRC-feil <strong id="crc">–</strong></div>
 <div class="metric">Hendelser <strong id="events">0</strong></div>
 </div><p class="muted" id="progress">Opptak ikke startet</p></section>
-<section class="panel"><h2>Automatisk kommunikasjonsanalyse</h2><button id="analyze">Analyser nå</button><p class="muted">Gjelder data som fortsatt finnes i appens buffer (maks 12 000 hendelser).</p><div id="analysis" style="white-space:pre-wrap"></div></section>
+<section class="panel"><h2>Datakvalitet</h2><div class="quality"><div>RS-485/TCP-mottak<strong id="q-tcp"> –</strong></div><div>Telegramkvalitet (CRC)<strong id="q-crc"> –</strong></div><div>Sensorferskhet<strong id="q-sensor"> –</strong></div></div><p id="baseline-info" class="muted">Standard baseline</p><div class="toolbar"><button id="calibrate">Kalibrer baseline (30 min)</button><button id="commit" disabled>Lagre kalibrering</button><button id="reset">Tilbakestill</button></div><p id="calibration-status" class="muted"></p></section>\n<section class="panel"><h2>Automatisk kommunikasjonsanalyse</h2><button id="analyze">Analyser nå</button><p class="muted">Gjelder data som fortsatt finnes i appens buffer (maks 12 000 hendelser).</p><div id="analysis" style="white-space:pre-wrap"></div></section>
 <section class="panel"><h2>Hendelser (nyeste først)</h2>
 <div class="scroller"><table><thead><tr><th>Tid (UTC)</th><th>Type</th><th>Detaljer</th></tr></thead><tbody id="rows"></tbody></table></div></section>
 <p class="muted">Tidspunktene er HA-mottakstid, ikke fysisk RS-485-bittiming. Rå telegrambytes inngår ikke i denne betaversjonens API.</p>
@@ -111,5 +111,34 @@ $('analyze').onclick=async()=>{
   box.textContent='Datavindu: '+duration+' · '+a.events+' hendelser\\nTCP: '+a.tcp_bytes+' byte · median '+(a.tcp_interval_median_ms??'–')+' ms · maks '+(a.tcp_interval_max_ms??'–')+' ms\\nPauser over 0,5 s: '+a.gaps_over_threshold+' · CRC-feil: '+a.crc_errors+'\\nTelegrammer: '+top+'\\nStørste pauser: '+(a.largest_gaps||[]).slice(0,5).map(g=>g.seconds+' s ('+g.utc+')').join('; ')+'\\n\\nBegrensninger: '+(a.limits||[]).join(' ');
  }catch(e){box.textContent='Analysefeil: '+e.message}
 };
+const names={ok:'Normal',warning:'Avvik',error:'Feil',unknown:'Kartlegges'};
+function quality(id,value,status){
+ const el=$(id);el.textContent=' '+value;el.className=status||'unknown';
+}
+async function refreshQuality(){
+ try{
+  const [a,b]=await Promise.all([fetch('api/analysis').then(r=>r.json()),fetch('api/baseline').then(r=>r.json())]);
+  const q=a.quality||{};
+  quality('q-tcp',names[q.tcp?.status]||'Kartlegges',q.tcp?.status);
+  quality('q-crc',q.crc?.percent==null?'Kartlegges':q.crc.percent.toFixed(2)+' %',q.crc?.status);
+  quality('q-sensor',q.sensor?.worst_factor==null?'Kartlegges':q.sensor.worst_factor.toFixed(1)+'×',q.sensor?.status);
+  $('baseline-info').textContent=(b.source==='calibrated'?'Kalibrert':'Standard')+' baseline · TCP median '+b.baseline.tcp_median_ms+' ms · '+Object.keys(b.baseline.sensor_intervals_ms||{}).length+' sensorer';
+  $('calibration-status').textContent=b.message||'';
+  $('commit').disabled=b.calibration_state!=='running'||b.elapsed_s<1800;
+  $('calibrate').disabled=b.calibration_state==='running';
+ }catch(e){$('calibration-status').textContent='Kvalitetsanalyse utilgjengelig: '+e.message}
+}
+async function baselineAction(action){
+ if(action==='reset'&&!confirm('Gjenopprette standard baseline?'))return;
+ try{
+  const r=await fetch('api/baseline',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
+  if(!r.ok)throw Error(await r.text());
+  await refreshQuality();
+ }catch(e){$('calibration-status').textContent='Kalibrering: '+e.message}
+}
+$('calibrate').onclick=()=>baselineAction('start');
+$('commit').onclick=()=>baselineAction('commit');
+$('reset').onclick=()=>baselineAction('reset');
+setInterval(refreshQuality,5000);refreshQuality();
 buttons();$('connect').click();
 </script></body></html>

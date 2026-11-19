@@ -18,4 +18,3 @@ hassio_api: true
 map: []
 options: {}
 schema: {}
-image: null

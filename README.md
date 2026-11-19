@@ -65,7 +65,7 @@ See the [installation guide](docs/installation.md) for more information.
 | [Supported devices](docs/supported-devices.md) | Tested hardware and known compatibility limitations |
 | [Sensors and everyday use](docs/entities.md) | Available sensor information and how to use it |
 | [Troubleshooting and maintenance](docs/troubleshooting.md) | Connection issues, updates, restoring and uninstalling |
-| [Diagnostics – CASA Live Analysis](casa_live_analysis/README.md) | Optional Home Assistant app for live connection metrics, automatic communication analysis, 15-minute capture and CSV export (requires compatible diagnostics API beta) |
+| [Diagnostics – CASA Live Analysis](casa_live_analysis/README.md) | Optional Home Assistant app for live connection metrics, automatic communication analysis, 15-minute capture and CSV export (app v1.0.0 requires CASA Premium integration v1.3.0 or later with diagnostics API) |
 
 ## Support and Contributions
 

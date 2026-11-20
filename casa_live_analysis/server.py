@@ -7,6 +7,7 @@ from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 from analysis import analyze, calibrate, DEFAULT_BASELINE
+from capture import Capture
 
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
 
@@ -63,6 +64,7 @@ class State:
 
 
 state = State()
+capture = Capture()
 
 
 async def consume_ws(session, url):
@@ -109,6 +111,7 @@ async def consume_ws(session, url):
                 event = {**event, 'utc': event.get('timestamp'), 'kind': 'tcp_receive',
                          'keys': event.get('sensor_keys', [])}
                 state.events.append(event)
+                capture.append(event)
                 if calibration['state'] == 'running':
                     calibration['events'].append(event)
                 state.last_seq = seq
@@ -186,6 +189,30 @@ async def analysis_report(request):
     return web.json_response(report)
 
 
+async def capture_status(request):
+    return web.json_response(capture.snapshot())
+
+
+async def capture_action(request):
+    action = (await request.json()).get('action')
+    try:
+        if action == 'start':
+            capture.start()
+        elif action == 'stop':
+            capture.stop()
+        else:
+            raise web.HTTPBadRequest(text='Invalid capture action')
+    except (OSError, ValueError) as exc:
+        raise web.HTTPConflict(text=str(exc))
+    return web.json_response(capture.snapshot())
+
+
+async def capture_download(request):
+    if not capture.file.is_file():
+        raise web.HTTPNotFound(text='No saved capture')
+    return web.FileResponse(capture.file, headers={'Content-Disposition': 'attachment; filename="casa-last-capture.csv"'})
+
+
 async def baseline_status(request):
     try:
         shared = await integration_quality()
@@ -223,6 +250,9 @@ app = web.Application(client_max_size=1024 * 1024)
 app.router.add_get("/", index)
 app.router.add_get("/api/diagnostics", diagnostics)
 app.router.add_get("/api/analysis", analysis_report)
+app.router.add_get("/api/capture", capture_status)
+app.router.add_post("/api/capture", capture_action)
+app.router.add_get("/api/capture/download", capture_download)
 app.router.add_get("/api/baseline", baseline_status)
 app.router.add_post("/api/baseline", baseline_action)
 app.on_startup.append(on_start)

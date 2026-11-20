@@ -1267,6 +1267,34 @@ async def _async_start_hub(hass, host, port, config, entry=None):
         hub.quality.calibration_status = ('completed' if hub.quality.calibrated_at else
                                           'default' if stored_baseline.get('calibration_status') == 'default'
                                           else 'unknown')
+    hub.calibration_task = None
+
+    async def finish_calibration(expected_start):
+        """Finalize independently of the browser, preserving prior baseline on failure."""
+        try:
+            await asyncio.sleep(1800)
+            monitor = hub.quality
+            if monitor.calibration_started != expected_start:
+                return
+            # Do not commit until the full monotonic 30-minute interval elapsed.
+            remaining = max(0, 1800 - (asyncio.get_running_loop().time() - expected_start))
+            if remaining:
+                await asyncio.sleep(remaining)
+            if monitor.calibration_started != expected_start:
+                return
+            candidate = monitor.commit_calibration()
+            await hub.baseline_store.async_save({**candidate, 'calibrated_at': monitor.calibrated_at})
+            hub.notify()
+        except asyncio.CancelledError:
+            raise
+        except ValueError as exc:
+            _LOGGER.warning('CASA automatic calibration rejected: %s', exc)
+            hub.notify()
+        except Exception:
+            _LOGGER.exception('CASA automatic calibration save failed')
+            hub.quality.calibration_status = 'failed'
+            hub.notify()
+
     hass.data[DOMAIN] = hub
     try:
         if entry is None:
@@ -1306,13 +1334,22 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                     action = msg['action']
                     if action == 'start':
                         monitor.start_calibration()
+                        if active.calibration_task and not active.calibration_task.done():
+                            active.calibration_task.cancel()
+                        active.calibration_task = hass.async_create_background_task(
+                            finish_calibration(monitor.calibration_started),
+                            'CASA Premium automatic 30-minute calibration')
                     elif action == 'commit':
                         candidate = monitor.commit_calibration()
                         await active.baseline_store.async_save({**candidate, 'calibrated_at': monitor.calibrated_at})
                     elif action == 'cancel':
                         monitor.cancel_calibration()
+                        if active.calibration_task:
+                            active.calibration_task.cancel()
                     elif action == 'reset':
                         monitor.reset_calibration()
+                        if active.calibration_task:
+                            active.calibration_task.cancel()
                         await active.baseline_store.async_save({**monitor.baseline, 'calibration_status': 'default'})
                     if action != 'status':
                         active.notify()

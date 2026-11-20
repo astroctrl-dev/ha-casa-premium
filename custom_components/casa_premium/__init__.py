@@ -1263,7 +1263,9 @@ async def _async_start_hub(hass, host, port, config, entry=None):
         hub.quality.baseline = stored_baseline
         # Legacy baseline files have no verifiable calibration timestamp.
         hub.quality.calibrated_at = stored_baseline.get('calibrated_at')
-        hub.quality.calibration_status = ('completed' if hub.quality.calibrated_at else 'unknown')
+        hub.quality.calibration_status = ('completed' if hub.quality.calibrated_at else
+                                          'default' if stored_baseline.get('calibration_status') == 'default'
+                                          else 'unknown')
     hass.data[DOMAIN] = hub
     try:
         if entry is None:
@@ -1308,10 +1310,12 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                         await active.baseline_store.async_save({**candidate, 'calibrated_at': monitor.calibrated_at})
                     elif action == 'reset':
                         monitor.reset_calibration()
-                        await active.baseline_store.async_save(monitor.baseline)
+                        await active.baseline_store.async_save({**monitor.baseline, 'calibration_status': 'default'})
                     if action != 'status':
                         active.notify()
                 except ValueError as exc:
+                    if msg['action'] == 'commit' and monitor.calibration_status == 'failed':
+                        active.notify()
                     connection.send_error(msg['id'], 'calibration_rejected', str(exc))
                     return
                 result = monitor.snapshot()

@@ -14,7 +14,7 @@ MIN_CRC_SAMPLES = 1000
 
 class QualityMonitor:
     def __init__(self, baseline=None):
-        self.baseline = baseline or dict(DEFAULT_BASELINE)
+        self.baseline = baseline if baseline is not None else {'tcp_median_ms': 150.0, 'sensor_intervals_ms': {}}
         self.connected = False
         self.receives = deque(maxlen=5000)
         self.valid_frames = 0
@@ -71,20 +71,22 @@ class QualityMonitor:
         self.calibration_frames_start = self.valid_frames
 
     def commit_calibration(self):
-        if self.calibration_started is None or monotonic() - self.calibration_started < 1800:
+        if self.calibration_started is None:
+            raise ValueError('Calibration not running')
+        if monotonic() - self.calibration_started < 1800:
             raise ValueError('Calibration requires 30 minutes')
         crc = self.crc_errors - self.calibration_crc_start
         valid = self.valid_frames - self.calibration_frames_start
         if valid + crc < MIN_CRC_SAMPLES or crc / (valid + crc) >= 0.001:
-            raise ValueError('Insufficient or poor CRC quality')
+            self._reject_calibration('Insufficient or poor CRC quality')
         receive = [b-a for a,b in zip(self.calibration_receives, self.calibration_receives[1:])]
         if len(receive) < 30 or any(g > 6 for g in receive):
-            raise ValueError('Insufficient or interrupted TCP traffic')
+            self._reject_calibration('Insufficient or interrupted TCP traffic')
         sensor_intervals = {}
         for key in EXPECTED_SENSORS:
             times = self.calibration_sensors[key]
             if len(times) < 11:
-                raise ValueError(f'Insufficient sensor observations: {key}')
+                self._reject_calibration(f'Insufficient sensor observations: {key}')
             sensor_intervals[key] = round(1000 * median(b-a for a,b in zip(times,times[1:])), 1)
         candidate = {'tcp_median_ms': round(1000*median(receive),1),
                      'sensor_intervals_ms': sensor_intervals}
@@ -95,8 +97,17 @@ class QualityMonitor:
         self.calibration_started = None
         return candidate
 
+    def _reject_calibration(self, reason):
+        """Reject a completed run without discarding the last valid baseline."""
+        self.calibration_started = None
+        self.calibration_started_at = None
+        self.calibration_status = 'failed'
+        self.calibration_receives = []
+        self.calibration_sensors.clear()
+        raise ValueError(reason)
+
     def reset_calibration(self):
-        self.baseline = dict(DEFAULT_BASELINE)
+        self.baseline = {'tcp_median_ms': 150.0, 'sensor_intervals_ms': {}}
         self.calibrated_at = None
         self.calibration_started_at = None
         self.calibration_status = 'default'
@@ -138,7 +149,26 @@ class QualityMonitor:
                             "reference_ms": round(reference_ms, 1)}
         sensor_state = ("unknown" if not sufficient else
                         "ok" if worst < 3 else "warning" if worst <= 5 else "error")
+        # Functional quality is independent of historical TCP read pauses.
+        # An active disconnect, missing sensor, or insufficient CRC evidence
+        # must never be presented as a healthy overall result.
+        if not self.connected:
+            overall_state = 'error'
+            overall_reason = 'tcp_disconnected'
+        elif sensor_state == 'error' or crc_state == 'error':
+            overall_state = 'error'
+            overall_reason = 'sensor_or_crc_error'
+        elif sensor_state == 'unknown' or crc_state == 'unknown':
+            overall_state = 'unknown'
+            overall_reason = 'insufficient_evidence'
+        elif sensor_state == 'warning' or crc_state == 'warning':
+            overall_state = 'warning'
+            overall_reason = 'sensor_or_crc_warning'
+        else:
+            overall_state = 'ok'
+            overall_reason = 'sensors_and_crc_ok'
         return {
+            'overall': {'status': overall_state, 'reason': overall_reason},
             "tcp": {"status": tcp_state, "unexpected_gaps": len(gaps),
                     "connected": self.connected},
             "crc": {"status": crc_state, "percent": percent, "checked": total,

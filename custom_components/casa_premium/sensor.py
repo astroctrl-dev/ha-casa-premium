@@ -428,7 +428,15 @@ class CasaQualitySensor(CasaEntity, SensorEntity):
 
     @property
     def native_value(self):
-        return self.hub.quality.snapshot()[self.key]['status']
+        quality = self.hub.quality.snapshot()[self.key]
+        if self.key == 'crc':
+            percent = quality.get('percent')
+            return f'{percent:.2f} %' if percent is not None else 'Ukjent'
+        if self.key == 'sensor':
+            factor = quality.get('worst_factor')
+            return f'{factor:.1f}×' if factor is not None else 'Ukjent'
+        return {'ok': 'Normal', 'warning': 'Avvik', 'error': 'Feil',
+                'unknown': 'Kartlegges'}.get(quality['status'], 'Ukjent')
 
     @property
     def extra_state_attributes(self):

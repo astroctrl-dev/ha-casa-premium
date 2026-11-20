@@ -50,7 +50,7 @@ KEYS = TEMPERATURES + RPM + PERCENT + OTHER + IDENTIFICATION
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     hub = hass.data[DOMAIN]
-    async_add_entities([CasaReceiveDiagnosticSensor(hub, key) for key in ('tcp', 'serial', 'telegram', 'fresh')] + [CasaQualitySensor(hub, key) for key in ('tcp', 'crc', 'sensor')] + [CasaSensor(hub, key) for key in KEYS] + [CasaActualModeSensor(hub)] + [CasaClockSensor(hub, key) for key in ("clock", "weekday", "clock_drift")] + [CasaUnknownTemperatureIndex01(hub)] +
+    async_add_entities([CasaCalibrationSensor(hub)] + [CasaReceiveDiagnosticSensor(hub, key) for key in ('tcp', 'serial', 'telegram', 'fresh')] + [CasaQualitySensor(hub, key) for key in ('tcp', 'crc', 'sensor')] + [CasaSensor(hub, key) for key in KEYS] + [CasaActualModeSensor(hub)] + [CasaClockSensor(hub, key) for key in ("clock", "weekday", "clock_drift")] + [CasaUnknownTemperatureIndex01(hub)] +
                        [CasaCo2ThresholdSensor(hub, index) for index in (0, 1)] +
                        [CasaServiceNumberSensor(hub, description) for description in SERVICE_NUMBERS] +
                        [CasaSupplySetpointSensor(hub)] +
@@ -404,6 +404,38 @@ class CasaCo2ThresholdSensor(CasaEntity, SensorEntity):
 async def async_setup_entry(hass, entry, async_add_entities):
     """Forwarded config-entry setup; preserve the same read-only entities."""
     await async_setup_platform(hass, {}, async_add_entities)
+
+
+class CasaCalibrationSensor(CasaEntity, SensorEntity):
+    """Last confirmed quality calibration, shared with the analysis app."""
+    _attr_should_poll = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = 'mdi:calendar-check'
+
+    def __init__(self, hub):
+        self.hub = hub
+        self._attr_name = 'Kommunikasjonskalibrering'
+        self._attr_unique_id = f'casa_premium_{hub.host}_quality_calibration'
+        configure_translation(self, hub)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, hub.host)},
+            name='Swegon CASA Premium', manufacturer='Swegon')
+
+    @property
+    def native_value(self):
+        calibration = self.hub.quality.snapshot()['calibration']
+        return {'default': 'Standardverdier', 'running': 'Pågår',
+                'completed': 'Fullført', 'failed': 'Feilet',
+                'unknown': 'Ukjent'}.get(calibration['status'], 'Ukjent')
+
+    @property
+    def extra_state_attributes(self):
+        result = dict(self.hub.quality.snapshot()['calibration'])
+        result['baseline'] = self.hub.quality.baseline
+        return result
+
+    async def async_added_to_hass(self):
+        self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
 
 
 class CasaQualitySensor(CasaEntity, SensorEntity):

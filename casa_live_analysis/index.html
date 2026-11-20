@@ -128,7 +128,10 @@ async function refreshQuality(){
   quality('q-tcp',names[q.tcp?.status]||'Kartlegges',q.tcp?.status);
   quality('q-crc',q.crc?.percent==null?'Kartlegges':q.crc.percent.toFixed(2)+' %',q.crc?.status);
   quality('q-sensor',q.sensor?.worst_factor==null?'Kartlegges':q.sensor.worst_factor.toFixed(1)+'×',q.sensor?.status);
-  $('baseline-info').textContent=(Object.keys(b.baseline.sensor_intervals_ms||{}).length?'Kalibrert':'Standard')+' baseline · TCP median '+b.baseline.tcp_median_ms+' ms · '+Object.keys(b.baseline.sensor_intervals_ms||{}).length+' sensorer';
+   const cal=b.calibration||{};
+   const statusNames={default:'Standardverdier',running:'Pågår',completed:'Fullført',failed:'Feilet',unknown:'Ukjent'};
+   const when=cal.calibrated_at?new Date(cal.calibrated_at).toLocaleString('nb-NO'):'Ikke registrert';
+   $('baseline-info').textContent='Kalibrering: '+(statusNames[cal.status]||'Ukjent')+' · Sist fullført: '+when+' · TCP median '+b.baseline.tcp_median_ms+' ms · '+Object.keys(b.baseline.sensor_intervals_ms||{}).length+' sensorer';
   $('calibration-status').textContent=b.message||'';
   $('commit').disabled=b.calibration_state!=='running';
   $('calibrate').disabled=b.calibration_state==='running';

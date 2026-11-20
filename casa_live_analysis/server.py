@@ -62,7 +62,7 @@ state = State()
 
 async def consume_ws(session, url):
     LOG.info("Connecting to HA websocket: %s", url)
-    async with session.ws_connect(url, heartbeat=30, timeout=15) as ws:
+    async with session.ws_connect(url, heartbeat=30, timeout=15, max_msg_size=16 * 1024 * 1024) as ws:
         hello = await ws.receive_json(timeout=15)
         if hello.get("type") != "auth_required":
             raise RuntimeError("Expected auth_required, got " + str(hello.get("type")))

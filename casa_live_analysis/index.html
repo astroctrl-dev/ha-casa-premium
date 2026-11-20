@@ -35,7 +35,7 @@ th,td{text-align:left;border-bottom:1px solid #354554;padding:7px;overflow-wrap:
 <div class="metric">CRC-feil <strong id="crc">–</strong></div>
 <div class="metric">Hendelser <strong id="events">0</strong></div>
 </div><p class="muted" id="progress">Opptak ikke startet</p></section>
-<section class="panel"><h2>Datakvalitet</h2><div class="quality"><div>RS-485/TCP-mottak<strong id="q-tcp"> –</strong></div><div>Telegramkvalitet (CRC)<strong id="q-crc"> –</strong></div><div>Sensorferskhet<strong id="q-sensor"> –</strong></div></div><p id="baseline-info" class="muted">Standard baseline</p><div class="toolbar"><button id="calibrate">Kalibrer baseline (30 min)</button><button id="commit" disabled>Lagre kalibrering</button><button id="reset">Tilbakestill</button></div><p id="calibration-status" class="muted"></p></section>
+<section class="panel"><h2>Datakvalitet</h2><div class="quality"><div>RS-485/TCP-mottak<strong id="q-tcp"> –</strong></div><div>Telegramkvalitet (CRC)<strong id="q-crc"> –</strong></div><div>Sensorferskhet<strong id="q-sensor"> –</strong></div></div><p id="baseline-info" class="muted">Standard baseline</p><div class="toolbar"><button id="calibrate">Kalibrer baseline (30 min)</button><button id="commit" disabled>Lagre kalibrering</button><button id="cancel-calibration" disabled>Avbryt kalibrering</button><button id="reset">Tilbakestill</button></div><p id="calibration-status" class="muted"></p></section>
 <section class="panel"><h2>Automatisk kommunikasjonsanalyse</h2><button id="analyze">Analyser nå</button><p class="muted">Gjelder data som fortsatt finnes i appens buffer (maks 12 000 hendelser).</p><div id="analysis" style="white-space:pre-wrap"></div></section>
 <section class="panel"><h2>Hendelser (nyeste først)</h2>
 <div class="scroller"><table><thead><tr><th>Tid (UTC)</th><th>Type</th><th>Detaljer</th></tr></thead><tbody id="rows"></tbody></table></div></section>
@@ -124,7 +124,7 @@ async function refreshQuality(){
   quality('q-crc',q.crc?.percent==null?'Kartlegges':q.crc.percent.toFixed(2)+' %',q.crc?.status);
   quality('q-sensor',q.sensor?.worst_factor==null?'Kartlegges':q.sensor.worst_factor.toFixed(1)+'×',q.sensor?.status);
    const cal=b.calibration||{};
-   const statusNames={default:'Standardverdier',running:'Pågår',completed:'Fullført',failed:'Feilet',unknown:'Ukjent'};
+   const statusNames={default:'Standardverdier',running:'Pågår',completed:'Fullført og lagret',failed:'Feilet',cancelled:'Avbrutt',unknown:'Ukjent'};
    const when=cal.calibrated_at?new Date(cal.calibrated_at).toLocaleString('nb-NO'):'Ikke registrert';
    $('baseline-info').textContent='Kalibrering: '+(statusNames[cal.status]||'Ukjent')+' · Sist fullført: '+when+' · TCP median '+b.baseline.tcp_median_ms+' ms · '+Object.keys(b.baseline.sensor_intervals_ms||{}).length+' sensorer';
   $('calibration-status').textContent=b.message||'';
@@ -142,6 +142,7 @@ async function baselineAction(action){
 }
 $('calibrate').onclick=()=>baselineAction('start');
 $('commit').onclick=()=>baselineAction('commit');
+$('cancel-calibration').onclick=()=>baselineAction('cancel');
 $('reset').onclick=()=>baselineAction('reset');
 setInterval(refreshQuality,5000);refreshQuality();
 buttons();$('connect').click();

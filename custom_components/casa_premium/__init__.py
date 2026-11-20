@@ -1314,6 +1314,8 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                     if action != 'status':
                         active.notify()
                 except ValueError as exc:
+                    if msg['action'] == 'commit' and monitor.calibration_status == 'failed':
+                        active.notify()
                     connection.send_error(msg['id'], 'calibration_rejected', str(exc))
                     return
                 result = monitor.snapshot()

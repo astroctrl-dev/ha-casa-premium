@@ -1,5 +1,5 @@
 name: CASA Live Analysis
-version: "1.1.1b4"
+version: "1.1.2"
 slug: casa_live_analysis
 description: Read-only CASA Premium live diagnostics, 15-minute recording and CSV
 url: https://github.com/astroctrl-dev/ha-casa-premium

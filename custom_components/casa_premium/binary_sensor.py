@@ -1,6 +1,6 @@
 """CASA status flags and alarms."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from . import DOMAIN, SERVICE_CONFIG
 from .entity import CasaEntity, configure_translation
 from .readback import SERVICE_FLAGS, service_choice_value
@@ -172,7 +172,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class CasaConnectionDiagnostic(CasaEntity, BinarySensorEntity):
     """Four independently observable receive-chain stages, including offline state."""
     _attr_should_poll = False
-    _attr_entity_category = 'diagnostic'
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = 'mdi:lan-check'
     _NAMES = {'tcp': 'TCP-forbindelse', 'serial': 'Serielle råbytes',
               'telegram': 'CASA-telegrammer', 'fresh': 'Ferske sensordata'}

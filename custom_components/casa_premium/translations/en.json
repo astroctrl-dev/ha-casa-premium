@@ -1139,6 +1139,18 @@
       },
       "quality_sensor": {
         "name": "Sensor freshness"
+      },
+      "diagnostic_tcp": {
+        "name": "TCP connection"
+      },
+      "diagnostic_serial": {
+        "name": "Serial raw bytes"
+      },
+      "diagnostic_telegram": {
+        "name": "CASA telegrams"
+      },
+      "diagnostic_fresh": {
+        "name": "Fresh sensor data"
       }
     },
     "binary_sensor": {

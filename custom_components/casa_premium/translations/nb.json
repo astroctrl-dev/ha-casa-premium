@@ -1139,6 +1139,18 @@
       },
       "quality_sensor": {
         "name": "Sensorferskhet"
+      },
+      "diagnostic_tcp": {
+        "name": "TCP-forbindelse"
+      },
+      "diagnostic_serial": {
+        "name": "Serielle råbytes"
+      },
+      "diagnostic_telegram": {
+        "name": "CASA-telegrammer"
+      },
+      "diagnostic_fresh": {
+        "name": "Ferske sensordata"
       }
     },
     "binary_sensor": {

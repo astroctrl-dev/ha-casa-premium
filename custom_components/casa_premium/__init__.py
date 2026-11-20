@@ -1261,6 +1261,9 @@ async def _async_start_hub(hass, host, port, config, entry=None):
     stored_baseline = await hub.baseline_store.async_load()
     if isinstance(stored_baseline, dict) and isinstance(stored_baseline.get('sensor_intervals_ms'), dict):
         hub.quality.baseline = stored_baseline
+        # Legacy baseline files have no verifiable calibration timestamp.
+        hub.quality.calibrated_at = stored_baseline.get('calibrated_at')
+        hub.quality.calibration_status = ('completed' if hub.quality.calibrated_at else 'unknown')
     hass.data[DOMAIN] = hub
     try:
         if entry is None:
@@ -1302,7 +1305,7 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                         monitor.start_calibration()
                     elif action == 'commit':
                         candidate = monitor.commit_calibration()
-                        await active.baseline_store.async_save(candidate)
+                        await active.baseline_store.async_save({**candidate, 'calibrated_at': monitor.calibrated_at})
                     elif action == 'reset':
                         monitor.reset_calibration()
                         await active.baseline_store.async_save(monitor.baseline)
@@ -1312,6 +1315,7 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                 result = monitor.snapshot()
                 result['calibration_state'] = (
                     'running' if monitor.calibration_started is not None else 'idle')
+                result['calibration'] = monitor.snapshot()['calibration']
                 connection.send_result(msg['id'], result)
             @websocket_api.websocket_command({
                 vol.Required('type'): 'casa_premium/diagnostics',

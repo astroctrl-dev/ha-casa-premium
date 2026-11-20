@@ -181,7 +181,8 @@ async def baseline_status(request):
     except RuntimeError as exc:
         raise web.HTTPServiceUnavailable(text=str(exc))
     return web.json_response({'baseline': shared.get('baseline'), 'source': 'integration',
-                              'calibration_state': shared.get('calibration_state')})
+                              'calibration_state': shared.get('calibration_state'),
+                              'calibration': shared.get('calibration')})
 
 
 async def baseline_action(request):
@@ -193,7 +194,8 @@ async def baseline_action(request):
     except RuntimeError as exc:
         raise web.HTTPServiceUnavailable(text=str(exc))
     return web.json_response({'baseline': shared.get('baseline'), 'source': 'integration',
-                              'calibration_state': shared.get('calibration_state')})
+                              'calibration_state': shared.get('calibration_state'),
+                              'calibration': shared.get('calibration')})
 
 
 async def on_start(app):

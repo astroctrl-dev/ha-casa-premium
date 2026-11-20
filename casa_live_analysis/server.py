@@ -20,6 +20,7 @@ UPSTREAMS = (
     "ws://homeassistant:80/api/websocket",
 )
 MAX_EVENTS = 12000
+PAGE_SIZE = 200
 BASELINE_FILE = Path('/data/baseline.json')
 
 def read_baseline():
@@ -37,6 +38,8 @@ class State:
     def __init__(self):
         self.events = deque(maxlen=MAX_EVENTS)
         self.last_seq = 0
+        self.upstream_lost = 0
+        self.data_completeness = 'unknown'
         self.health = {}
         self.connected = False
         self.api_connected = False
@@ -52,6 +55,8 @@ class State:
             "health": self.health,
             "last_poll_utc": self.last_poll_utc,
             "latest_seq": self.last_seq,
+            "upstream_lost": self.upstream_lost,
+            "data_completeness": self.data_completeness,
             "lost": max(0, oldest - after - 1) if after else 0,
             "events": [e for e in self.events if e["seq"] > after],
         }
@@ -79,6 +84,7 @@ async def consume_ws(session, url):
                 "id": request_id,
                 "type": "casa_premium/diagnostics",
                 "after": state.last_seq,
+                "limit": PAGE_SIZE,
             })
             reply = await ws.receive_json(timeout=15)
             if reply.get("type") != "result" or reply.get("id") != request_id:
@@ -90,9 +96,12 @@ async def consume_ws(session, url):
             state.health = result.get("health", {})
             state.last_poll_utc = datetime.now(timezone.utc).isoformat()
             if result.get("lost"):
-                state.error = f"HA event buffer lost {result['lost']} events"
-            else:
-                state.error = None
+                state.upstream_lost += int(result["lost"])
+                state.data_completeness = "incomplete"
+            elif state.data_completeness == "unknown":
+                state.data_completeness = "complete"
+            state.error = (f"HA event buffer lost {state.upstream_lost} events"
+                           if state.upstream_lost else None)
             for event in result.get("events", []):
                 seq = event.get("seq")
                 if not isinstance(seq, int) or seq <= state.last_seq:
@@ -103,7 +112,9 @@ async def consume_ws(session, url):
                 if calibration['state'] == 'running':
                     calibration['events'].append(event)
                 state.last_seq = seq
-            await asyncio.sleep(1)
+            # Drain bounded pages before waiting; resume from the last confirmed seq.
+            if not result.get("has_more"):
+                await asyncio.sleep(1)
 
 
 async def poll_forever(app):

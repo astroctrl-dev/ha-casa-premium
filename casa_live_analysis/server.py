@@ -7,6 +7,7 @@ from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 from analysis import analyze, calibrate, DEFAULT_BASELINE
+from capture import Capture
 
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
 
@@ -20,6 +21,7 @@ UPSTREAMS = (
     "ws://homeassistant:80/api/websocket",
 )
 MAX_EVENTS = 12000
+PAGE_SIZE = 200
 BASELINE_FILE = Path('/data/baseline.json')
 
 def read_baseline():
@@ -37,6 +39,8 @@ class State:
     def __init__(self):
         self.events = deque(maxlen=MAX_EVENTS)
         self.last_seq = 0
+        self.upstream_lost = 0
+        self.data_completeness = 'unknown'
         self.health = {}
         self.connected = False
         self.api_connected = False
@@ -52,12 +56,15 @@ class State:
             "health": self.health,
             "last_poll_utc": self.last_poll_utc,
             "latest_seq": self.last_seq,
+            "upstream_lost": self.upstream_lost,
+            "data_completeness": self.data_completeness,
             "lost": max(0, oldest - after - 1) if after else 0,
             "events": [e for e in self.events if e["seq"] > after],
         }
 
 
 state = State()
+capture = Capture()
 
 
 async def consume_ws(session, url):
@@ -79,6 +86,7 @@ async def consume_ws(session, url):
                 "id": request_id,
                 "type": "casa_premium/diagnostics",
                 "after": state.last_seq,
+                "limit": PAGE_SIZE,
             })
             reply = await ws.receive_json(timeout=15)
             if reply.get("type") != "result" or reply.get("id") != request_id:
@@ -90,9 +98,12 @@ async def consume_ws(session, url):
             state.health = result.get("health", {})
             state.last_poll_utc = datetime.now(timezone.utc).isoformat()
             if result.get("lost"):
-                state.error = f"HA event buffer lost {result['lost']} events"
-            else:
-                state.error = None
+                state.upstream_lost += int(result["lost"])
+                state.data_completeness = "incomplete"
+            elif state.data_completeness == "unknown":
+                state.data_completeness = "complete"
+            state.error = (f"HA event buffer lost {state.upstream_lost} events"
+                           if state.upstream_lost else None)
             for event in result.get("events", []):
                 seq = event.get("seq")
                 if not isinstance(seq, int) or seq <= state.last_seq:
@@ -100,10 +111,13 @@ async def consume_ws(session, url):
                 event = {**event, 'utc': event.get('timestamp'), 'kind': 'tcp_receive',
                          'keys': event.get('sensor_keys', [])}
                 state.events.append(event)
+                capture.append(event)
                 if calibration['state'] == 'running':
                     calibration['events'].append(event)
                 state.last_seq = seq
-            await asyncio.sleep(1)
+            # Drain bounded pages before waiting; resume from the last confirmed seq.
+            if not result.get("has_more"):
+                await asyncio.sleep(1)
 
 
 async def poll_forever(app):
@@ -175,6 +189,30 @@ async def analysis_report(request):
     return web.json_response(report)
 
 
+async def capture_status(request):
+    return web.json_response(capture.snapshot())
+
+
+async def capture_action(request):
+    action = (await request.json()).get('action')
+    try:
+        if action == 'start':
+            capture.start()
+        elif action == 'stop':
+            capture.stop()
+        else:
+            raise web.HTTPBadRequest(text='Invalid capture action')
+    except (OSError, ValueError) as exc:
+        raise web.HTTPConflict(text=str(exc))
+    return web.json_response(capture.snapshot())
+
+
+async def capture_download(request):
+    if not capture.file.is_file():
+        raise web.HTTPNotFound(text='No saved capture')
+    return web.FileResponse(capture.file, headers={'Content-Disposition': 'attachment; filename="casa-last-capture.csv"'})
+
+
 async def baseline_status(request):
     try:
         shared = await integration_quality()
@@ -187,7 +225,7 @@ async def baseline_status(request):
 
 async def baseline_action(request):
     action = (await request.json()).get('action')
-    if action not in ('start', 'commit', 'reset'):
+    if action not in ('start', 'commit', 'cancel', 'reset'):
         raise web.HTTPBadRequest(text='Invalid action')
     try:
         shared = await integration_quality(action)
@@ -198,20 +236,31 @@ async def baseline_action(request):
                               'calibration': shared.get('calibration')})
 
 
+async def capture_watchdog():
+    while True:
+        capture.tick()
+        await asyncio.sleep(1)
+
+
 async def on_start(app):
     app["poll_task"] = asyncio.create_task(poll_forever(app))
+    app["capture_task"] = asyncio.create_task(capture_watchdog())
 
 
 async def on_cleanup(app):
-    task = app["poll_task"]
-    task.cancel()
-    await asyncio.gather(task, return_exceptions=True)
+    tasks = [app["poll_task"], app["capture_task"]]
+    for task in tasks:
+        task.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
 
 
 app = web.Application(client_max_size=1024 * 1024)
 app.router.add_get("/", index)
 app.router.add_get("/api/diagnostics", diagnostics)
 app.router.add_get("/api/analysis", analysis_report)
+app.router.add_get("/api/capture", capture_status)
+app.router.add_post("/api/capture", capture_action)
+app.router.add_get("/api/capture/download", capture_download)
 app.router.add_get("/api/baseline", baseline_status)
 app.router.add_post("/api/baseline", baseline_action)
 app.on_startup.append(on_start)

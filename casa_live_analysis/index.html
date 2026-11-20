@@ -35,7 +35,7 @@ th,td{text-align:left;border-bottom:1px solid #354554;padding:7px;overflow-wrap:
 <div class="metric">CRC-feil <strong id="crc">–</strong></div>
 <div class="metric">Hendelser <strong id="events">0</strong></div>
 </div><p class="muted" id="progress">Opptak ikke startet</p></section>
-<section class="panel"><h2>Datakvalitet</h2><div class="quality"><div>RS-485/TCP-mottak<strong id="q-tcp"> –</strong></div><div>Telegramkvalitet (CRC)<strong id="q-crc"> –</strong></div><div>Sensorferskhet<strong id="q-sensor"> –</strong></div></div><p id="baseline-info" class="muted">Standard baseline</p><div class="toolbar"><button id="calibrate">Kalibrer baseline (30 min)</button><button id="commit" disabled>Lagre kalibrering</button><button id="reset">Tilbakestill</button></div><p id="calibration-status" class="muted"></p></section>
+<section class="panel"><h2>Datakvalitet</h2><div class="quality"><div>RS-485/TCP-mottak<strong id="q-tcp"> –</strong></div><div>Telegramkvalitet (CRC)<strong id="q-crc"> –</strong></div><div>Sensorferskhet<strong id="q-sensor"> –</strong></div></div><p id="baseline-info" class="muted">Standard baseline</p><div class="toolbar"><button id="calibrate">Kalibrer baseline (30 min)</button><button id="commit" disabled>Lagre kalibrering</button><button id="cancel-calibration" disabled>Avbryt kalibrering</button><button id="reset">Tilbakestill</button></div><p id="calibration-status" class="muted"></p></section>
 <section class="panel"><h2>Automatisk kommunikasjonsanalyse</h2><button id="analyze">Analyser nå</button><p class="muted">Gjelder data som fortsatt finnes i appens buffer (maks 12 000 hendelser).</p><div id="analysis" style="white-space:pre-wrap"></div></section>
 <section class="panel"><h2>Hendelser (nyeste først)</h2>
 <div class="scroller"><table><thead><tr><th>Tid (UTC)</th><th>Type</th><th>Detaljer</th></tr></thead><tbody id="rows"></tbody></table></div></section>
@@ -44,10 +44,11 @@ th,td{text-align:left;border-bottom:1px solid #354554;padding:7px;overflow-wrap:
 'use strict';
 const $=id=>document.getElementById(id);
 let timer=null,seq=0,recording=false,deadline=0,recorded=[];
+let captureStatus={status:'idle',remaining_seconds:0,file_exists:false};
 // Capture one read-only diagnostic sample per poll, even if no event arrives.
 
 const rows=[];
-function buttons(){ $('connect').disabled=!!timer;$('disconnect').disabled=!timer;$('record').disabled=!timer||recording;$('stop').disabled=!recording;$('csv').disabled=!recorded.length }
+function buttons(){ $('connect').disabled=!!timer;$('disconnect').disabled=!timer;$('record').disabled=captureStatus.status==='running';$('stop').disabled=captureStatus.status!=='running';$('csv').disabled=!captureStatus.file_exists }
 function appendEvents(data){
  if(data.lost)$('error').textContent='Advarsel: '+data.lost+' hendelser mangler i buffer';
  for(const e of data.events||[]){
@@ -86,26 +87,20 @@ async function poll(){
 }
 $('connect').onclick=()=>{if(timer)return;timer=setInterval(poll,1000);poll();buttons()};
 $('disconnect').onclick=()=>{clearInterval(timer);timer=null;$('status').textContent='Stoppet';buttons()};
-$('record').onclick=()=>{recorded=[];recording=true;deadline=Date.now()+15*60*1000;buttons();$('progress').textContent='Opptak startet – målinger samles hvert sekund'};
-$('stop').onclick=()=>{recording=false;buttons()};
-$('csv').onclick=()=>{
- const fields=['utc','seq','kind','elapsed_ms','event_json'];
- const quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
- const lines=[fields.join(',')];
- for(const e of recorded)lines.push([e.utc,e.seq,e.kind,e.elapsed_ms,JSON.stringify(e)].map(quote).join(','));
- const blob=new Blob([lines.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'});
- const a=document.createElement('a');a.href=URL.createObjectURL(blob);
- a.download='casa-diagnostics-'+new Date().toISOString().replace(/[:.]/g,'-')+'.csv';a.click();
- setTimeout(()=>URL.revokeObjectURL(a.href),2000);
-};
-setInterval(()=>{
- $('clock').textContent=new Date().toLocaleTimeString('no-NO');
- if(recording){
-  const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));
-  $('progress').textContent='Opptak: '+recorded.length+' hendelser · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0')+' igjen';
-  if(left===0){recording=false;buttons();$('progress').textContent='Opptak fullført: '+recorded.length+' rader klare for CSV'}
- }else $('progress').textContent=recorded.length?'Opptak stoppet: '+recorded.length+' hendelser klare for CSV':'Opptak ikke startet';
-},1000);
+async function captureAction(action){
+ try{const r=await fetch('api/capture',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});if(!r.ok)throw Error(await r.text());await refreshCapture()}
+ catch(e){$('progress').textContent='Opptak: '+e.message}
+}
+async function refreshCapture(){
+ try{const r=await fetch('api/capture',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);
+ captureStatus=await r.json();const c=captureStatus,left=c.remaining_seconds||0;
+ $('progress').textContent=c.status==='running'?'Opptak pågår · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0')+' igjen · '+c.rows+' hendelser':c.status==='saved'?'Loggfil lagret · '+c.rows+' hendelser':c.status==='failed'?'Opptak feilet: '+c.error:'Opptak ikke startet';buttons()}
+ catch(e){$('progress').textContent='Opptaksstatus utilgjengelig: '+e.message}
+}
+$('record').onclick=()=>captureAction('start');
+$('stop').onclick=()=>captureAction('stop');
+$('csv').onclick=()=>{window.location.href='api/capture/download'};
+setInterval(()=>{$('clock').textContent=new Date().toLocaleTimeString('no-NO');refreshCapture()},1000);
 $('analyze').onclick=async()=>{
  const box=$('analysis');box.textContent='Analyserer …';
  try{
@@ -129,7 +124,7 @@ async function refreshQuality(){
   quality('q-crc',q.crc?.percent==null?'Kartlegges':q.crc.percent.toFixed(2)+' %',q.crc?.status);
   quality('q-sensor',q.sensor?.worst_factor==null?'Kartlegges':q.sensor.worst_factor.toFixed(1)+'×',q.sensor?.status);
    const cal=b.calibration||{};
-   const statusNames={default:'Standardverdier',running:'Pågår',completed:'Fullført',failed:'Feilet',unknown:'Ukjent'};
+   const statusNames={default:'Standardverdier',running:'Pågår',completed:'Fullført og lagret',failed:'Feilet',cancelled:'Avbrutt',unknown:'Ukjent'};
    const when=cal.calibrated_at?new Date(cal.calibrated_at).toLocaleString('nb-NO'):'Ikke registrert';
    $('baseline-info').textContent='Kalibrering: '+(statusNames[cal.status]||'Ukjent')+' · Sist fullført: '+when+' · TCP median '+b.baseline.tcp_median_ms+' ms · '+Object.keys(b.baseline.sensor_intervals_ms||{}).length+' sensorer';
   $('calibration-status').textContent=b.message||'';
@@ -147,6 +142,7 @@ async function baselineAction(action){
 }
 $('calibrate').onclick=()=>baselineAction('start');
 $('commit').onclick=()=>baselineAction('commit');
+$('cancel-calibration').onclick=()=>baselineAction('cancel');
 $('reset').onclick=()=>baselineAction('reset');
 setInterval(refreshQuality,5000);refreshQuality();
 buttons();$('connect').click();

@@ -46,6 +46,17 @@ class QualityA1Tests(unittest.TestCase):
         m.start_calibration()
         self.assertEqual(m.calibration_status, "running")
 
+    def test_cancel_keeps_baseline_and_allows_restart(self):
+        m = quality.QualityMonitor(baseline={'tcp_median_ms': 128.6, 'sensor_intervals_ms': {}})
+        m.start_calibration()
+        self.assertGreater(m.snapshot()['calibration']['remaining_seconds'], 0)
+        m.cancel_calibration()
+        self.assertEqual(m.calibration_status, 'cancelled')
+        self.assertEqual(m.baseline['tcp_median_ms'], 128.6)
+        self.assertEqual(m.snapshot()['calibration']['remaining_seconds'], 0)
+        m.start_calibration()
+        self.assertEqual(m.calibration_status, 'running')
+
     def test_reset_uses_fresh_default_baseline(self):
         m = self.healthy_monitor()
         m.reset_calibration()

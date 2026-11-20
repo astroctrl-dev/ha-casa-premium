@@ -14,6 +14,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from .decoder import FrameParser, decode, decode_actual_mode, crc16
 from .protocol_logger import ProtocolLogger
 from .quality import QualityMonitor
+from .diagnostic_paging import diagnostic_page
 from homeassistant.components import websocket_api
 from homeassistant.helpers.storage import Store
 
@@ -1266,6 +1267,34 @@ async def _async_start_hub(hass, host, port, config, entry=None):
         hub.quality.calibration_status = ('completed' if hub.quality.calibrated_at else
                                           'default' if stored_baseline.get('calibration_status') == 'default'
                                           else 'unknown')
+    hub.calibration_task = None
+
+    async def finish_calibration(expected_start):
+        """Finalize independently of the browser, preserving prior baseline on failure."""
+        try:
+            await asyncio.sleep(1800)
+            monitor = hub.quality
+            if monitor.calibration_started != expected_start:
+                return
+            # Do not commit until the full monotonic 30-minute interval elapsed.
+            remaining = max(0, 1800 - (asyncio.get_running_loop().time() - expected_start))
+            if remaining:
+                await asyncio.sleep(remaining)
+            if monitor.calibration_started != expected_start:
+                return
+            candidate = monitor.commit_calibration()
+            await hub.baseline_store.async_save({**candidate, 'calibrated_at': monitor.calibrated_at})
+            hub.notify()
+        except asyncio.CancelledError:
+            raise
+        except ValueError as exc:
+            _LOGGER.warning('CASA automatic calibration rejected: %s', exc)
+            hub.notify()
+        except Exception:
+            _LOGGER.exception('CASA automatic calibration save failed')
+            hub.quality.calibration_status = 'failed'
+            hub.notify()
+
     hass.data[DOMAIN] = hub
     try:
         if entry is None:
@@ -1292,7 +1321,7 @@ async def _async_start_hub(hass, host, port, config, entry=None):
             @websocket_api.websocket_command({
                 vol.Required('type'): 'casa_premium/quality',
                 vol.Optional('action', default='status'): vol.In(
-                    ['status', 'start', 'commit', 'reset']),
+                    ['status', 'start', 'commit', 'cancel', 'reset']),
             })
             @websocket_api.async_response
             async def quality_ws(hass, connection, msg):
@@ -1305,11 +1334,24 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                     action = msg['action']
                     if action == 'start':
                         monitor.start_calibration()
+                        if active.calibration_task and not active.calibration_task.done():
+                            active.calibration_task.cancel()
+                        active.calibration_task = hass.async_create_background_task(
+                            finish_calibration(monitor.calibration_started),
+                            'CASA Premium automatic 30-minute calibration')
                     elif action == 'commit':
                         candidate = monitor.commit_calibration()
                         await active.baseline_store.async_save({**candidate, 'calibrated_at': monitor.calibrated_at})
+                        if active.calibration_task:
+                            active.calibration_task.cancel()
+                    elif action == 'cancel':
+                        monitor.cancel_calibration()
+                        if active.calibration_task:
+                            active.calibration_task.cancel()
                     elif action == 'reset':
                         monitor.reset_calibration()
+                        if active.calibration_task:
+                            active.calibration_task.cancel()
                         await active.baseline_store.async_save({**monitor.baseline, 'calibration_status': 'default'})
                     if action != 'status':
                         active.notify()
@@ -1326,6 +1368,7 @@ async def _async_start_hub(hass, host, port, config, entry=None):
             @websocket_api.websocket_command({
                 vol.Required('type'): 'casa_premium/diagnostics',
                 vol.Optional('after', default=0): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                vol.Optional('limit', default=200): vol.All(vol.Coerce(int), vol.Range(min=1, max=200)),
             })
             @websocket_api.async_response
             async def diagnostics_ws(hass, connection, msg):
@@ -1335,7 +1378,7 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                     return
                 events = active.diagnostic_events
                 after = msg['after']
-                oldest = events[0]['seq'] if events else active.diagnostic_seq + 1
+                paging = diagnostic_page(events, after, msg['limit'], active.diagnostic_seq)
                 connection.send_result(msg['id'], {
                     'connected': active.connected,
                     'health': {
@@ -1346,8 +1389,7 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                         'crc_errors': active.diagnostic_crc_errors,
                     },
                     'latest_seq': active.diagnostic_seq,
-                    'lost': max(0, oldest - after - 1) if after else 0,
-                    'events': [e for e in events if e['seq'] > after],
+                    **paging,
                 })
             websocket_api.async_register_command(hass, diagnostics_ws)
             websocket_api.async_register_command(hass, quality_ws)

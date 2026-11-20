@@ -106,6 +106,15 @@ class QualityMonitor:
         self.calibration_sensors.clear()
         raise ValueError(reason)
 
+    def cancel_calibration(self):
+        if self.calibration_started is None:
+            raise ValueError('Calibration not running')
+        self.calibration_started = None
+        self.calibration_started_at = None
+        self.calibration_status = 'cancelled'
+        self.calibration_receives = []
+        self.calibration_sensors.clear()
+
     def reset_calibration(self):
         self.baseline = {'tcp_median_ms': 150.0, 'sensor_intervals_ms': {}}
         self.calibrated_at = None
@@ -115,6 +124,7 @@ class QualityMonitor:
 
     def snapshot(self):
         now = monotonic()
+        remaining_seconds = max(0, int(1800 - (now - self.calibration_started) + 0.999)) if self.calibration_started is not None else 0
         total = self.valid_frames + self.crc_errors
         percent = round(100 * self.crc_errors / total, 3) if total else None
         crc_state = ("unknown" if total < MIN_CRC_SAMPLES else
@@ -178,6 +188,7 @@ class QualityMonitor:
                        "details": sensors},
             "baseline": self.baseline,
             "calibration": {"status": self.calibration_status,
+                            "remaining_seconds": remaining_seconds,
                             "calibrated_at": self.calibrated_at,
                             "started_at": self.calibration_started_at},
         }

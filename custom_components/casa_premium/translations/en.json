@@ -1130,6 +1130,15 @@
           "Supply": "Supply air",
           "Extract": "Extract air"
         }
+      },
+      "quality_tcp": {
+        "name": "RS-485/TCP reception"
+      },
+      "quality_crc": {
+        "name": "Telegram quality (CRC)"
+      },
+      "quality_sensor": {
+        "name": "Sensor freshness"
       }
     },
     "binary_sensor": {
@@ -1637,6 +1646,18 @@
           "on": "On",
           "off": "Off"
         }
+      },
+      "connection_tcp": {
+        "name": "TCP connection"
+      },
+      "connection_serial": {
+        "name": "Serial raw bytes"
+      },
+      "connection_telegram": {
+        "name": "CASA telegrams"
+      },
+      "connection_fresh": {
+        "name": "Fresh sensor data"
       }
     }
   },

@@ -1342,6 +1342,8 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                     elif action == 'commit':
                         candidate = monitor.commit_calibration()
                         await active.baseline_store.async_save({**candidate, 'calibrated_at': monitor.calibrated_at})
+                        if active.calibration_task:
+                            active.calibration_task.cancel()
                     elif action == 'cancel':
                         monitor.cancel_calibration()
                         if active.calibration_task:

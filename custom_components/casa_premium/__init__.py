@@ -1309,6 +1309,8 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                     elif action == 'reset':
                         monitor.reset_calibration()
                         await active.baseline_store.async_save(monitor.baseline)
+                    if action != 'status':
+                        active.notify()
                 except ValueError as exc:
                     connection.send_error(msg['id'], 'calibration_rejected', str(exc))
                     return

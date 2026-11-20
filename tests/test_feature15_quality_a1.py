@@ -11,7 +11,7 @@ SPEC.loader.exec_module(quality)
 
 class QualityA1Tests(unittest.TestCase):
     def healthy_monitor(self):
-        m = quality.QualityMonitor()
+        m = quality.QualityMonitor(baseline={'tcp_median_ms': 150.0, 'sensor_intervals_ms': {key: 1000.0 for key in quality.EXPECTED_SENSORS}})
         m.connection(True)
         for _ in range(1000):
             m.receive(8, 1, 0, quality.EXPECTED_SENSORS)

@@ -5,6 +5,7 @@ No device writes. All times are HA monotonic receive observations, not RS-485 wi
 from collections import deque, defaultdict
 from statistics import median
 from time import monotonic
+from datetime import datetime, timezone
 
 DEFAULT_BASELINE = {"tcp_median_ms": 150.0, "sensor_intervals_ms": {}}
 EXPECTED_SENSORS = ("outdoor_temp", "supply_temp", "extract_temp", "exhaust_temp")
@@ -25,6 +26,9 @@ class QualityMonitor:
         self.epoch = 0
         self.receive_epochs = deque(maxlen=5000)
         self.calibration_started = None
+        self.calibrated_at = None
+        self.calibration_started_at = None
+        self.calibration_status = 'default'
         self.calibration_receives = []
         self.calibration_sensors = defaultdict(list)
         self.calibration_crc_start = 0
@@ -59,6 +63,8 @@ class QualityMonitor:
         if self.calibration_started is not None:
             raise ValueError('Calibration already running')
         self.calibration_started = monotonic()
+        self.calibration_started_at = datetime.now(timezone.utc).isoformat()
+        self.calibration_status = 'running'
         self.calibration_receives = []
         self.calibration_sensors = defaultdict(list)
         self.calibration_crc_start = self.crc_errors
@@ -83,11 +89,17 @@ class QualityMonitor:
         candidate = {'tcp_median_ms': round(1000*median(receive),1),
                      'sensor_intervals_ms': sensor_intervals}
         self.baseline = candidate
+        self.calibrated_at = datetime.now(timezone.utc).isoformat()
+        self.calibration_started_at = None
+        self.calibration_status = 'completed'
         self.calibration_started = None
         return candidate
 
     def reset_calibration(self):
         self.baseline = dict(DEFAULT_BASELINE)
+        self.calibrated_at = None
+        self.calibration_started_at = None
+        self.calibration_status = 'default'
         self.calibration_started = None
 
     def snapshot(self):
@@ -135,4 +147,7 @@ class QualityMonitor:
                        "worst_factor": round(worst, 2) if sufficient else None,
                        "details": sensors},
             "baseline": self.baseline,
+            "calibration": {"status": self.calibration_status,
+                            "calibrated_at": self.calibrated_at,
+                            "started_at": self.calibration_started_at},
         }

@@ -188,6 +188,7 @@ class QualityMonitor:
                        "details": sensors},
             "baseline": self.baseline,
             "calibration": {"status": self.calibration_status,
+                            "remaining_seconds": remaining_seconds,
                             "calibrated_at": self.calibrated_at,
                             "started_at": self.calibration_started_at},
         }

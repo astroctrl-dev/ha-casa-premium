@@ -1326,6 +1326,7 @@ async def _async_start_hub(hass, host, port, config, entry=None):
             @websocket_api.websocket_command({
                 vol.Required('type'): 'casa_premium/diagnostics',
                 vol.Optional('after', default=0): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                vol.Optional('limit', default=200): vol.All(vol.Coerce(int), vol.Range(min=1, max=200)),
             })
             @websocket_api.async_response
             async def diagnostics_ws(hass, connection, msg):
@@ -1336,6 +1337,8 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                 events = active.diagnostic_events
                 after = msg['after']
                 oldest = events[0]['seq'] if events else active.diagnostic_seq + 1
+                page = [e for e in events if e['seq'] > after][:msg['limit']]
+                next_after = page[-1]['seq'] if page else after
                 connection.send_result(msg['id'], {
                     'connected': active.connected,
                     'health': {
@@ -1347,7 +1350,9 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                     },
                     'latest_seq': active.diagnostic_seq,
                     'lost': max(0, oldest - after - 1) if after else 0,
-                    'events': [e for e in events if e['seq'] > after],
+                    'events': page,
+                    'next_after': next_after,
+                    'has_more': next_after < active.diagnostic_seq,
                 })
             websocket_api.async_register_command(hass, diagnostics_ws)
             websocket_api.async_register_command(hass, quality_ws)

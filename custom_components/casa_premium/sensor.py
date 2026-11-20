@@ -50,7 +50,7 @@ KEYS = TEMPERATURES + RPM + PERCENT + OTHER + IDENTIFICATION
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     hub = hass.data[DOMAIN]
-    async_add_entities([CasaQualitySensor(hub, key) for key in ('tcp', 'crc', 'sensor')] + [CasaSensor(hub, key) for key in KEYS] + [CasaActualModeSensor(hub)] + [CasaClockSensor(hub, key) for key in ("clock", "weekday", "clock_drift")] + [CasaUnknownTemperatureIndex01(hub)] +
+    async_add_entities([CasaReceiveDiagnosticSensor(hub, key) for key in ('tcp', 'serial', 'telegram', 'fresh')] + [CasaQualitySensor(hub, key) for key in ('tcp', 'crc', 'sensor')] + [CasaSensor(hub, key) for key in KEYS] + [CasaActualModeSensor(hub)] + [CasaClockSensor(hub, key) for key in ("clock", "weekday", "clock_drift")] + [CasaUnknownTemperatureIndex01(hub)] +
                        [CasaCo2ThresholdSensor(hub, index) for index in (0, 1)] +
                        [CasaServiceNumberSensor(hub, description) for description in SERVICE_NUMBERS] +
                        [CasaSupplySetpointSensor(hub)] +
@@ -433,6 +433,56 @@ class CasaQualitySensor(CasaEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         return self.hub.quality.snapshot()[self.key]
+
+    async def async_added_to_hass(self):
+        self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
+
+
+class CasaReceiveDiagnosticSensor(CasaEntity, SensorEntity):
+    """Reuse the existing sensor-domain diagnostic entity IDs; never create binary duplicates."""
+    _attr_should_poll = False
+    _attr_entity_category = 'diagnostic'
+    _attr_icon = 'mdi:lan-check'
+    _NAMES = {'tcp': 'TCP-forbindelse', 'serial': 'Serielle råbytes',
+              'telegram': 'CASA-telegrammer', 'fresh': 'Ferske sensordata'}
+
+    def __init__(self, hub, key):
+        self.hub, self.key = hub, key
+        self._attr_name = self._NAMES[key]
+        self._attr_unique_id = f'casa_premium_{hub.host}_diagnostic_{key}'
+        configure_translation(self, hub)
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)},
+                                            name='Swegon CASA Premium', manufacturer='Swegon')
+
+    @property
+    def available(self):
+        return True
+
+    @property
+    def native_value(self):
+        if not self.hub.connected:
+            return 'Frakoblet'
+        if self.key == 'tcp':
+            return 'Tilkoblet'
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        events = list(self.hub.diagnostic_events)
+        recent = []
+        for event in reversed(events):
+            try:
+                age = (now - datetime.fromisoformat(event['timestamp'])).total_seconds()
+            except (KeyError, ValueError, TypeError):
+                continue
+            if age > 60:
+                break
+            recent.append(event)
+        if self.key == 'serial':
+            active = any(e.get('bytes', 0) > 0 for e in recent)
+        elif self.key == 'telegram':
+            active = any(e.get('frames', 0) > 0 for e in recent)
+        else:
+            active = any(e.get('sensor_keys') for e in recent)
+        return 'OK' if active else 'Ingen data siste 60 s'
 
     async def async_added_to_hass(self):
         self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))

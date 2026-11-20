@@ -14,6 +14,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from .decoder import FrameParser, decode, decode_actual_mode, crc16
 from .protocol_logger import ProtocolLogger
 from .quality import QualityMonitor
+from .diagnostic_paging import diagnostic_page
 from homeassistant.components import websocket_api
 from homeassistant.helpers.storage import Store
 
@@ -1336,9 +1337,7 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                     return
                 events = active.diagnostic_events
                 after = msg['after']
-                oldest = events[0]['seq'] if events else active.diagnostic_seq + 1
-                page = [e for e in events if e['seq'] > after][:msg['limit']]
-                next_after = page[-1]['seq'] if page else after
+                paging = diagnostic_page(events, after, msg['limit'], active.diagnostic_seq)
                 connection.send_result(msg['id'], {
                     'connected': active.connected,
                     'health': {
@@ -1349,10 +1348,7 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                         'crc_errors': active.diagnostic_crc_errors,
                     },
                     'latest_seq': active.diagnostic_seq,
-                    'lost': max(0, oldest - after - 1) if after else 0,
-                    'events': page,
-                    'next_after': next_after,
-                    'has_more': next_after < active.diagnostic_seq,
+                    **paging,
                 })
             websocket_api.async_register_command(hass, diagnostics_ws)
             websocket_api.async_register_command(hass, quality_ws)

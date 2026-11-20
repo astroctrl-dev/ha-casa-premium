@@ -1,6 +1,6 @@
 """CASA read-only numeric sensors."""
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from . import DOMAIN, SERVICE_CONFIG
 from .entity import CasaEntity, configure_translation
 from .readback import SERVICE_NUMBERS, SERVICE_CHOICES, service_number_value, service_choice_value
@@ -409,7 +409,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class CasaQualitySensor(CasaEntity, SensorEntity):
     """Quality status shared with CASA Live Analysis, without extra TCP connections."""
     _attr_should_poll = False
-    _attr_entity_category = 'diagnostic'
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = 'mdi:chart-line'
     _NAMES = {'tcp': 'RS-485/TCP-mottak', 'crc': 'Telegramkvalitet (CRC)',
               'sensor': 'Sensorferskhet'}
@@ -449,7 +449,7 @@ class CasaQualitySensor(CasaEntity, SensorEntity):
 class CasaReceiveDiagnosticSensor(CasaEntity, SensorEntity):
     """Reuse the existing sensor-domain diagnostic entity IDs; never create binary duplicates."""
     _attr_should_poll = False
-    _attr_entity_category = 'diagnostic'
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = 'mdi:lan-check'
     _NAMES = {'tcp': 'TCP-forbindelse', 'serial': 'Serielle råbytes',
               'telegram': 'CASA-telegrammer', 'fresh': 'Ferske sensordata'}

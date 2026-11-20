@@ -1197,8 +1197,8 @@ class CasaHub:
                             'raw_hex': chunk.hex(),
                             'sensor_keys': sorted(observed_keys),
                         })
-                        if changed:
-                            self.notify()
+                        # Quality and connection diagnostics update even when decoded values do not change.
+                        self.notify()
                         await self._process_logging(frames)
                 except asyncio.CancelledError:
                     raise

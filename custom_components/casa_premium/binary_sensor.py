@@ -1,6 +1,5 @@
 """CASA status flags and alarms."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from time import monotonic
 from homeassistant.helpers.entity import DeviceInfo
 from . import DOMAIN, SERVICE_CONFIG
 from .entity import CasaEntity, configure_translation
@@ -183,6 +182,7 @@ class CasaConnectionDiagnostic(CasaEntity, BinarySensorEntity):
         self.hub, self.key = hub, key
         self._attr_name = self._NAMES[key]
         self._attr_unique_id = f'casa_premium_{hub.host}_connection_{key}'
+        configure_translation(self, hub)
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)},
                                             name='Swegon CASA Premium', manufacturer='Swegon')
 

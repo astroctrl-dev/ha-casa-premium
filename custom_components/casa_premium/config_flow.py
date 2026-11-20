@@ -57,8 +57,6 @@ class CasaPremiumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             port = user_input[CONF_PORT]
             if not _valid_host(host):
                 errors["base"] = "invalid_host"
-            elif not await _probe(host, port):
-                errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(f"{host}:{port}")
                 self._abort_if_unique_id_configured()
@@ -87,9 +85,7 @@ class CasaPremiumOptionsFlow(config_entries.OptionsFlow):
             host, port = user_input[CONF_HOST], user_input[CONF_PORT]
             if not _valid_host(host):
                 errors["base"] = "invalid_host"
-            elif (host, port) != (current[CONF_HOST], current[CONF_PORT]):
-                if not await _probe(host, port):
-                    errors["base"] = "cannot_connect"
+            # Valid endpoint settings can be saved even when TCP is unavailable.
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
         return self.async_show_form(

@@ -1,0 +1,19 @@
+name: CASA isolated diagnostics smoke
+on:
+  push:
+    branches: [feature/shared-diagnostics-quality]
+  pull_request:
+    paths:
+      - 'custom_components/casa_premium/**'
+      - 'casa_live_analysis/**'
+      - 'tests/test_quality_smoke.py'
+jobs:
+  isolated-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run isolated quality/API smoke
+        run: python tests/test_quality_smoke.py

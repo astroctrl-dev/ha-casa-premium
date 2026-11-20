@@ -1,5 +1,7 @@
 """Swegon CASA Premium TCP integration with protocol logging and mode control."""
 import socket
+from collections import deque
+from datetime import timezone
 import asyncio
 import logging
 from datetime import datetime
@@ -11,6 +13,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from .decoder import FrameParser, decode, decode_actual_mode, crc16
 from .protocol_logger import ProtocolLogger
+from .quality import QualityMonitor
+from homeassistant.components import websocket_api
+from homeassistant.helpers.storage import Store
 
 DOMAIN = 'casa_premium'
 LOGGING_ENTITY = 'input_boolean.casa_ventilasjon_logging'
@@ -233,6 +238,9 @@ class CasaHub:
         self.listeners = set()
         self.task = None
         self.parser = FrameParser()
+        self.quality = QualityMonitor()
+        self.diagnostic_events = deque(maxlen=12000)
+        self.diagnostic_seq = 0
         self.protocol_logger = ProtocolLogger(hass.config.config_dir)
         self._logging_was_on = False
         self._logged_frames = 0
@@ -1133,6 +1141,7 @@ class CasaHub:
                     self._cooling_status_event.clear()
                     self._reset_mode_readback()
                     self.connected = True
+                    self.quality.connection(True)
                     self.notify()
                     _LOGGER.info('CASA connected to %s:%s', self.host, self.port)
                     while True:
@@ -1147,12 +1156,16 @@ class CasaHub:
                         if not chunk:
                             _LOGGER.warning('CASA TCP stream closed; reconnecting')
                             break
+                        before_crc = self.parser.crc_errors
                         frames = list(self.parser.feed(chunk))
+                        crc_delta = self.parser.crc_errors - before_crc
                         changed = False
+                        observed_keys = set()
                         for frame in frames:
                             decoded = decode(frame)
                             if decoded:
                                 self.values.update(decoded)
+                                observed_keys.update(decoded)
                                 changed = True
                             self._process_service_frame(frame)
                             self._process_week_frame(frame)
@@ -1166,6 +1179,16 @@ class CasaHub:
                                 self._process_mode_response(frame)
                             elif frame[6] == 0x73:
                                 self._process_mode_status(frame)
+                        self.quality.receive(len(chunk), len(frames), crc_delta, observed_keys)
+                        self.diagnostic_seq += 1
+                        self.diagnostic_events.append({
+                            'seq': self.diagnostic_seq,
+                            'timestamp': datetime.now(timezone.utc).isoformat(),
+                            'bytes': len(chunk), 'frames': len(frames),
+                            'crc_errors': crc_delta,
+                            'raw_hex': chunk.hex(),
+                            'sensor_keys': sorted(observed_keys),
+                        })
                         if changed:
                             self.notify()
                         await self._process_logging(frames)
@@ -1179,6 +1202,7 @@ class CasaHub:
                     # Mark disconnected before awaiting socket shutdown, so
                     # concurrent mode writes cannot use the stale connection.
                     self.connected = False
+                    self.quality.connection(False)
                     self.writer = None
                     self.values.clear()
                     self.clock_data = None
@@ -1225,6 +1249,10 @@ async def _async_start_hub(hass, host, port, config, entry=None):
             "CASA Premium already configured; remove duplicate YAML/UI setup"
         )
     hub = CasaHub(hass, host, port)
+    hub.baseline_store = Store(hass, 1, 'casa_premium_quality_baseline')
+    stored_baseline = await hub.baseline_store.async_load()
+    if isinstance(stored_baseline, dict) and isinstance(stored_baseline.get('sensor_intervals_ms'), dict):
+        hub.quality.baseline = stored_baseline
     hass.data[DOMAIN] = hub
     try:
         if entry is None:
@@ -1247,6 +1275,59 @@ async def _async_start_hub(hass, host, port, config, entry=None):
             DOMAIN, 'sync_clock', handle_sync_clock,
             schema=vol.Schema({vol.Optional('force', default=False): cv.boolean}),
         )
+        if not hass.data.get('casa_premium_quality_ws_registered'):
+            @websocket_api.websocket_command({
+                vol.Required('type'): 'casa_premium/quality',
+                vol.Optional('action', default='status'): vol.In(
+                    ['status', 'start', 'commit', 'reset']),
+            })
+            @websocket_api.async_response
+            async def quality_ws(hass, connection, msg):
+                active = hass.data.get(DOMAIN)
+                if active is None:
+                    connection.send_error(msg['id'], 'not_loaded', 'CASA integration not loaded')
+                    return
+                monitor = active.quality
+                try:
+                    action = msg['action']
+                    if action == 'start':
+                        monitor.start_calibration()
+                    elif action == 'commit':
+                        candidate = monitor.commit_calibration()
+                        await active.baseline_store.async_save(candidate)
+                    elif action == 'reset':
+                        monitor.reset_calibration()
+                        await active.baseline_store.async_save(monitor.baseline)
+                except ValueError as exc:
+                    connection.send_error(msg['id'], 'calibration_rejected', str(exc))
+                    return
+                result = monitor.snapshot()
+                result['calibration_state'] = (
+                    'running' if monitor.calibration_started is not None else 'idle')
+                connection.send_result(msg['id'], result)
+            @websocket_api.websocket_command({
+                vol.Required('type'): 'casa_premium/diagnostics',
+                vol.Optional('after', default=0): vol.All(vol.Coerce(int), vol.Range(min=0)),
+            })
+            @websocket_api.async_response
+            async def diagnostics_ws(hass, connection, msg):
+                active = hass.data.get(DOMAIN)
+                if active is None:
+                    connection.send_error(msg['id'], 'not_loaded', 'CASA integration not loaded')
+                    return
+                events = active.diagnostic_events
+                after = msg['after']
+                oldest = events[0]['seq'] if events else active.diagnostic_seq + 1
+                connection.send_result(msg['id'], {
+                    'connected': active.connected,
+                    'health': {'quality': active.quality.snapshot()},
+                    'latest_seq': active.diagnostic_seq,
+                    'lost': max(0, oldest - after - 1) if after else 0,
+                    'events': [e for e in events if e['seq'] > after],
+                })
+            websocket_api.async_register_command(hass, diagnostics_ws)
+            websocket_api.async_register_command(hass, quality_ws)
+            hass.data['casa_premium_quality_ws_registered'] = True
         hub.task = hass.async_create_background_task(
             hub.run(), 'CASA Premium TCP receiver'
         )

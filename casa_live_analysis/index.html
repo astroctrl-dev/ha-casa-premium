@@ -44,6 +44,8 @@ th,td{text-align:left;border-bottom:1px solid #354554;padding:7px;overflow-wrap:
 'use strict';
 const $=id=>document.getElementById(id);
 let timer=null,seq=0,recording=false,deadline=0,recorded=[];
+// Capture one read-only diagnostic sample per poll, even if no event arrives.
+
 const rows=[];
 function buttons(){ $('connect').disabled=!!timer;$('disconnect').disabled=!timer;$('record').disabled=!timer||recording;$('stop').disabled=!recording;$('csv').disabled=!recorded.length }
 function appendEvents(data){
@@ -76,12 +78,15 @@ async function poll(){
   $('frames').textContent=h.valid_frames??'–';
   $('decoded').textContent=h.decoded_frames??'–';
   $('crc').textContent=h.crc_errors??'–';
+  if(recording){
+   recorded.push({utc:new Date().toISOString(),kind:'diagnostic_sample',seq:data.seq??seq,connected:data.connected,api_connected:data.api_connected,health:h});
+  }
   appendEvents(data);
  }catch(e){$('status').textContent='Forbindelsesfeil';$('error').textContent=String(e)}
 }
 $('connect').onclick=()=>{if(timer)return;timer=setInterval(poll,1000);poll();buttons()};
 $('disconnect').onclick=()=>{clearInterval(timer);timer=null;$('status').textContent='Stoppet';buttons()};
-$('record').onclick=()=>{recorded=[];recording=true;deadline=Date.now()+15*60*1000;buttons()};
+$('record').onclick=()=>{recorded=[];recording=true;deadline=Date.now()+15*60*1000;buttons();$('progress').textContent='Opptak startet – målinger samles hvert sekund'};
 $('stop').onclick=()=>{recording=false;buttons()};
 $('csv').onclick=()=>{
  const fields=['utc','seq','kind','elapsed_ms','event_json'];
@@ -98,7 +103,7 @@ setInterval(()=>{
  if(recording){
   const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));
   $('progress').textContent='Opptak: '+recorded.length+' hendelser · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0')+' igjen';
-  if(left===0){recording=false;buttons()}
+  if(left===0){recording=false;buttons();$('progress').textContent='Opptak fullført: '+recorded.length+' rader klare for CSV'}
  }else $('progress').textContent=recorded.length?'Opptak stoppet: '+recorded.length+' hendelser klare for CSV':'Opptak ikke startet';
 },1000);
 $('analyze').onclick=async()=>{

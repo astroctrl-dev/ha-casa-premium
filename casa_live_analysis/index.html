@@ -44,10 +44,11 @@ th,td{text-align:left;border-bottom:1px solid #354554;padding:7px;overflow-wrap:
 'use strict';
 const $=id=>document.getElementById(id);
 let timer=null,seq=0,recording=false,deadline=0,recorded=[];
+let captureStatus={status:'idle',remaining_seconds:0,file_exists:false};
 // Capture one read-only diagnostic sample per poll, even if no event arrives.
 
 const rows=[];
-function buttons(){ $('connect').disabled=!!timer;$('disconnect').disabled=!timer;$('record').disabled=!timer||recording;$('stop').disabled=!recording;$('csv').disabled=!recorded.length }
+function buttons(){ $('connect').disabled=!!timer;$('disconnect').disabled=!timer;$('record').disabled=captureStatus.status==='running';$('stop').disabled=captureStatus.status!=='running';$('csv').disabled=!captureStatus.file_exists }
 function appendEvents(data){
  if(data.lost)$('error').textContent='Advarsel: '+data.lost+' hendelser mangler i buffer';
  for(const e of data.events||[]){

@@ -49,7 +49,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         CasaServiceStatus(hub, 'co2_control'),
         CasaServiceStatus(hub, 'external_control'),
     ] + [CasaFunctionStatus(hub, description) for description in SERVICE_FLAGS] + [
-        CasaMenuStatus(hub, 'temperature_setting'),
+        CasaConnectionDiagnostic(hub, key) for key in ('tcp', 'serial', 'telegram', 'fresh')
+    ] + [CasaMenuStatus(hub, 'temperature_setting'),
         CasaMenuStatus(hub, 'week_schedule_enabled'),
     ])
 

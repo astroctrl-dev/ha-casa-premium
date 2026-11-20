@@ -5,6 +5,9 @@ on:
       - 'custom_components/casa_premium/diagnostic_paging.py'
       - 'custom_components/casa_premium/__init__.py'
       - 'casa_live_analysis/server.py'
+      - 'casa_live_analysis/capture.py'
+      - 'casa_live_analysis/index.html'
+      - 'tests/test_feature15_capture_b2.py'
       - 'tests/test_feature15_paging_b1.py'
       - '.github/workflows/feature15-b1.yml'
   push:
@@ -23,6 +26,6 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile changed modules
-        run: python -m py_compile custom_components/casa_premium/diagnostic_paging.py custom_components/casa_premium/__init__.py casa_live_analysis/server.py
+        run: python -m py_compile custom_components/casa_premium/diagnostic_paging.py custom_components/casa_premium/__init__.py casa_live_analysis/server.py casa_live_analysis/capture.py
       - name: Test paging and quality
         run: python -m unittest discover -s tests -p 'test_feature15_*py' -v

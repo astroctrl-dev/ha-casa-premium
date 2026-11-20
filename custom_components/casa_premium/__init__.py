@@ -241,6 +241,10 @@ class CasaHub:
         self.quality = QualityMonitor()
         self.diagnostic_events = deque(maxlen=12000)
         self.diagnostic_seq = 0
+        self.diagnostic_bytes = 0
+        self.diagnostic_frames = 0
+        self.diagnostic_crc_errors = 0
+        self.diagnostic_decoded = 0
         self.protocol_logger = ProtocolLogger(hass.config.config_dir)
         self._logging_was_on = False
         self._logged_frames = 0
@@ -1181,6 +1185,10 @@ class CasaHub:
                                 self._process_mode_status(frame)
                         self.quality.receive(len(chunk), len(frames), crc_delta, observed_keys)
                         self.diagnostic_seq += 1
+                        self.diagnostic_bytes += len(chunk)
+                        self.diagnostic_frames += len(frames)
+                        self.diagnostic_crc_errors += crc_delta
+                        self.diagnostic_decoded += len(observed_keys)
                         self.diagnostic_events.append({
                             'seq': self.diagnostic_seq,
                             'timestamp': datetime.now(timezone.utc).isoformat(),
@@ -1320,7 +1328,13 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                 oldest = events[0]['seq'] if events else active.diagnostic_seq + 1
                 connection.send_result(msg['id'], {
                     'connected': active.connected,
-                    'health': {'quality': active.quality.snapshot()},
+                    'health': {
+                        'quality': active.quality.snapshot(),
+                        'received_bytes': active.diagnostic_bytes,
+                        'valid_frames': active.diagnostic_frames,
+                        'decoded_frames': active.diagnostic_decoded,
+                        'crc_errors': active.diagnostic_crc_errors,
+                    },
                     'latest_seq': active.diagnostic_seq,
                     'lost': max(0, oldest - after - 1) if after else 0,
                     'events': [e for e in events if e['seq'] > after],

@@ -225,7 +225,7 @@ async def baseline_status(request):
 
 async def baseline_action(request):
     action = (await request.json()).get('action')
-    if action not in ('start', 'commit', 'reset'):
+    if action not in ('start', 'commit', 'cancel', 'reset'):
         raise web.HTTPBadRequest(text='Invalid action')
     try:
         shared = await integration_quality(action)

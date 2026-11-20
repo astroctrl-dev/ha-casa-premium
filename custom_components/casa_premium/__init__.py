@@ -1293,7 +1293,7 @@ async def _async_start_hub(hass, host, port, config, entry=None):
             @websocket_api.websocket_command({
                 vol.Required('type'): 'casa_premium/quality',
                 vol.Optional('action', default='status'): vol.In(
-                    ['status', 'start', 'commit', 'reset']),
+                    ['status', 'start', 'commit', 'cancel', 'reset']),
             })
             @websocket_api.async_response
             async def quality_ws(hass, connection, msg):
@@ -1309,6 +1309,8 @@ async def _async_start_hub(hass, host, port, config, entry=None):
                     elif action == 'commit':
                         candidate = monitor.commit_calibration()
                         await active.baseline_store.async_save({**candidate, 'calibrated_at': monitor.calibrated_at})
+                    elif action == 'cancel':
+                        monitor.cancel_calibration()
                     elif action == 'reset':
                         monitor.reset_calibration()
                         await active.baseline_store.async_save({**monitor.baseline, 'calibration_status': 'default'})

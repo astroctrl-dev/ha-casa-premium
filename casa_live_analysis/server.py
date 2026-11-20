@@ -236,14 +236,22 @@ async def baseline_action(request):
                               'calibration': shared.get('calibration')})
 
 
+async def capture_watchdog():
+    while True:
+        capture.tick()
+        await asyncio.sleep(1)
+
+
 async def on_start(app):
     app["poll_task"] = asyncio.create_task(poll_forever(app))
+    app["capture_task"] = asyncio.create_task(capture_watchdog())
 
 
 async def on_cleanup(app):
-    task = app["poll_task"]
-    task.cancel()
-    await asyncio.gather(task, return_exceptions=True)
+    tasks = [app["poll_task"], app["capture_task"]]
+    for task in tasks:
+        task.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
 
 
 app = web.Application(client_max_size=1024 * 1024)

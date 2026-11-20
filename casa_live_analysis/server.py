@@ -97,6 +97,8 @@ async def consume_ws(session, url):
                 seq = event.get("seq")
                 if not isinstance(seq, int) or seq <= state.last_seq:
                     continue
+                event = {**event, 'utc': event.get('timestamp'), 'kind': 'tcp_receive',
+                         'keys': event.get('sensor_keys', [])}
                 state.events.append(event)
                 if calibration['state'] == 'running':
                     calibration['events'].append(event)

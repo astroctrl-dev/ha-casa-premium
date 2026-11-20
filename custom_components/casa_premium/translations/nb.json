@@ -1130,6 +1130,15 @@
           "Supply": "Tilluft",
           "Extract": "Avtrekk"
         }
+      },
+      "quality_tcp": {
+        "name": "RS-485/TCP-mottak"
+      },
+      "quality_crc": {
+        "name": "Telegramkvalitet (CRC)"
+      },
+      "quality_sensor": {
+        "name": "Sensorferskhet"
       }
     },
     "binary_sensor": {
@@ -1637,6 +1646,18 @@
           "on": "På",
           "off": "Av"
         }
+      },
+      "connection_tcp": {
+        "name": "TCP-forbindelse"
+      },
+      "connection_serial": {
+        "name": "Serielle råbytes"
+      },
+      "connection_telegram": {
+        "name": "CASA-telegrammer"
+      },
+      "connection_fresh": {
+        "name": "Ferske sensordata"
       }
     }
   },

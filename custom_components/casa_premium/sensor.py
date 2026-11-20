@@ -50,7 +50,7 @@ KEYS = TEMPERATURES + RPM + PERCENT + OTHER + IDENTIFICATION
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     hub = hass.data[DOMAIN]
-    async_add_entities([CasaSensor(hub, key) for key in KEYS] + [CasaActualModeSensor(hub)] + [CasaClockSensor(hub, key) for key in ("clock", "weekday", "clock_drift")] + [CasaUnknownTemperatureIndex01(hub)] +
+    async_add_entities([CasaQualitySensor(hub, key) for key in ('tcp', 'crc', 'sensor')] + [CasaSensor(hub, key) for key in KEYS] + [CasaActualModeSensor(hub)] + [CasaClockSensor(hub, key) for key in ("clock", "weekday", "clock_drift")] + [CasaUnknownTemperatureIndex01(hub)] +
                        [CasaCo2ThresholdSensor(hub, index) for index in (0, 1)] +
                        [CasaServiceNumberSensor(hub, description) for description in SERVICE_NUMBERS] +
                        [CasaSupplySetpointSensor(hub)] +
@@ -404,3 +404,35 @@ class CasaCo2ThresholdSensor(CasaEntity, SensorEntity):
 async def async_setup_entry(hass, entry, async_add_entities):
     """Forwarded config-entry setup; preserve the same read-only entities."""
     await async_setup_platform(hass, {}, async_add_entities)
+
+
+class CasaQualitySensor(CasaEntity, SensorEntity):
+    """Quality status shared with CASA Live Analysis, without extra TCP connections."""
+    _attr_should_poll = False
+    _attr_entity_category = 'diagnostic'
+    _attr_icon = 'mdi:chart-line'
+    _NAMES = {'tcp': 'RS-485/TCP-mottak', 'crc': 'Telegramkvalitet (CRC)',
+              'sensor': 'Sensorferskhet'}
+
+    def __init__(self, hub, key):
+        self.hub, self.key = hub, key
+        self._attr_name = self._NAMES[key]
+        self._attr_unique_id = f'casa_premium_{hub.host}_quality_{key}'
+        configure_translation(self, hub)
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)},
+                                            name='Swegon CASA Premium', manufacturer='Swegon')
+
+    @property
+    def available(self):
+        return True
+
+    @property
+    def native_value(self):
+        return self.hub.quality.snapshot()[self.key]['status']
+
+    @property
+    def extra_state_attributes(self):
+        return self.hub.quality.snapshot()[self.key]
+
+    async def async_added_to_hass(self):
+        self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))

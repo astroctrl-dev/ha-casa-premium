@@ -1,5 +1,6 @@
 """CASA status flags and alarms."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from time import monotonic
 from homeassistant.helpers.entity import DeviceInfo
 from . import DOMAIN, SERVICE_CONFIG
 from .entity import CasaEntity, configure_translation
@@ -168,3 +169,49 @@ class CasaServiceStatus(CasaEntity, BinarySensorEntity):
 async def async_setup_entry(hass, entry, async_add_entities):
     """Forwarded config-entry setup; preserve the same read-only entities."""
     await async_setup_platform(hass, {}, async_add_entities)
+
+
+class CasaConnectionDiagnostic(CasaEntity, BinarySensorEntity):
+    """Four independently observable receive-chain stages, including offline state."""
+    _attr_should_poll = False
+    _attr_entity_category = 'diagnostic'
+    _attr_icon = 'mdi:lan-check'
+    _NAMES = {'tcp': 'TCP-forbindelse', 'serial': 'Serielle råbytes',
+              'telegram': 'CASA-telegrammer', 'fresh': 'Ferske sensordata'}
+
+    def __init__(self, hub, key):
+        self.hub, self.key = hub, key
+        self._attr_name = self._NAMES[key]
+        self._attr_unique_id = f'casa_premium_{hub.host}_connection_{key}'
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.host)},
+                                            name='Swegon CASA Premium', manufacturer='Swegon')
+
+    @property
+    def available(self):
+        return True  # Offline is a valid diagnostic state, not Unavailable.
+
+    @property
+    def is_on(self):
+        if not self.hub.connected:
+            return False
+        if self.key == 'tcp':
+            return True
+        events = self.hub.diagnostic_events
+        if not events:
+            return False
+        last = events[-1]
+        from datetime import datetime, timezone
+        try:
+            age = (datetime.now(timezone.utc) - datetime.fromisoformat(last['timestamp'])).total_seconds()
+        except (KeyError, ValueError, TypeError):
+            return False
+        if age > 60:
+            return False
+        if self.key == 'serial':
+            return last['bytes'] > 0
+        if self.key == 'telegram':
+            return any(e['frames'] > 0 for e in list(events)[-50:])
+        return any(e['sensor_keys'] for e in list(events)[-50:])
+
+    async def async_added_to_hass(self):
+        self.async_on_remove(self.hub.subscribe(self.async_write_ha_state))
